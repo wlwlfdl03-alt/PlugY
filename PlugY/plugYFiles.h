@@ -14,6 +14,7 @@ extern void* stashBtnsImages;
 extern void* newStatsInterfaceImages;
 extern void* statsBackgroundImages;
 extern void* sharedGoldBtnsImages;
+extern void* sortBtnsImages;
 
 
 #define CREATE_TABLE_DESCRIPTION( N )	\

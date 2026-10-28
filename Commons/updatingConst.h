@@ -14,6 +14,8 @@ enum UpdateClientConst
 	UC_PAGE_NAME,
 	UC_ADD_STAT,
 	UC_ADD_SYNERGY,
+	UC_SORT_ITEM,
+	UC_SORT_DONE,
 	UC_TEST1,
 	UC_TEST2,
 	UC_TEST3
@@ -60,6 +62,7 @@ enum UpdateServerConst
 	US_TOGGLE1,
 	US_TOGGLE2,
 	US_TOGGLE3,
+	US_SORT_STASH,
 	US_TEST1,	//For CB
 	US_TEST2,	//For CB
 	US_TEST3	//For CB

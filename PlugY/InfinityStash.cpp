@@ -10,6 +10,7 @@
 #include "infinityStash.h"
 #include "updateClient.h"
 #include "interface_Stash.h"
+#include "sortStash.h"
 #include "common.h"
 
 #define STASH_TAG 0x5453			//"ST"
@@ -1198,6 +1199,7 @@ void Install_MultiPageStash()
 	if (isInstalled) return;
 
 	Install_PlayerCustomData();
+	Install_SortStash();
 	Install_InterfaceStash();
 
 	changeToSelectedStash = version_D2Common >= V110 ? changeToSelectedStash_10 : changeToSelectedStash_9;

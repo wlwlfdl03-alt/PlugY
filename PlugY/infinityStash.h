@@ -56,6 +56,10 @@ extern int posXStashGoldField;
 extern int posYStashGoldField;
 extern int posWStashGoldField;
 extern int posHStashGoldField;
+extern int posXSortBtn;
+extern int posYSortBtn;
+extern int posWSortBtn;
+extern int posHSortBtn;
 
 extern bool autoRenameStashPage;
 extern DWORD PersonalNormalPageColor;

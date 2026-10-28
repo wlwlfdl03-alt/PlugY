@@ -38,6 +38,7 @@ Each features can be turn on/off via PlugY.ini (see "COMMENTS ON THE CONFIGURATI
 - Display item level in its popup.
 - Launch any number of Diablo II games on the same computer.
 - Increase the stash to 10x10 squares.
+- Sort button in the 10x10 stash : sort the items of all the stash pages.
 - Change the save path directory.
 - Always display Mana and Life values above the globes.
 - D2 can load all files, even those opened with Microsoft Excel (disabled by default).
@@ -408,7 +409,7 @@ v1.00 features (can all be easily enabled or disabled) :
 
 
 ******** CONTENTS ********
-20 files, 1 folder :
+21 files, 1 folder :
 - PlugY_The_Survival_Kit_-_Readme.txt
 - PlugY_The_Survival_Kit_-_LisezMoi.txt
 - PlugY_The_Survival_Kit_-_Liesmich.txt
@@ -421,6 +422,7 @@ v1.00 features (can all be easily enabled or disabled) :
 - PlugY\LocalizedStrings.ini
 - PlugY\EmptyPage.dc6
 - PlugY\SharedGoldBtns.dc6
+- PlugY\SortBtns.dc6
 - PlugY\StashBtns.dc6
 - PlugY\TradeStash.dc6
 - PlugY\StatsBackground.dc6
@@ -705,6 +707,9 @@ In Diablo II Classic games, the big stash uses the same stash screen as LoD (onl
 When bigStash is enabled, you must restart D2 for play in single/multi/open when you have started a game in closed Bnet previously (and vice versa).
 Following are default values, between {} are some examples values with descriptions :
 - ActiveBigStash=0	{0:Default stash size is used; 1: Enabled, Stash uses 10x10 squared}
+With the multipage stash, the sort button (PlugY\SortBtns.dc6) at the bottom of the 10x10 stash sorts the items of all the pages of the stash shown (personal or shared),
+from the first page : by quality (normal, magic, rare, crafted, runeword, set, unique), then by type, a new page for each group.
+The names and the indexes of the pages are removed. Only with LoD 1.13c, 1.13d and 1.14d.
 
 Use this for sharing and keep all of your items. :)
 There are 2 multipage stashes :
@@ -738,9 +743,9 @@ Following are default values, between {} are some examples values with descripti
 - MaxSharedPages=0 		{0:Infinite number of shared pages; 5000: Maximum of 5000 shared pages}
 - ActiveSharedGold=1		{0:Disabled; 1:Use command to put and take gold (see command section)}
 - PosXPreviousBtn=-1		{-1: Default position, 50: Put the button at the position 50 in absiss}
-Same for PosYPreviousBtn, PosXNextBtn, PosYNextBtn, PosXSharedBtn, PosYSharedBtn, PosXPreviousIndexBtn, PosYPreviousIndexBtn, PosXNextIndexBtn, PosYNextIndexBtn, PosXPutGoldBtn, PosYPutGoldBtn, PosXTakeGoldBtn, PosYTakeGoldBtn, PosXStashNameField, PosYStashNameField, PosXStashGoldField, PosYStashGoldField.
+Same for PosYPreviousBtn, PosXNextBtn, PosYNextBtn, PosXSharedBtn, PosYSharedBtn, PosXPreviousIndexBtn, PosYPreviousIndexBtn, PosXNextIndexBtn, PosYNextIndexBtn, PosXPutGoldBtn, PosYPutGoldBtn, PosXTakeGoldBtn, PosYTakeGoldBtn, PosXStashNameField, PosYStashNameField, PosXStashGoldField, PosYStashGoldField, PosXSortBtn, PosYSortBtn.
 - PosWPreviousBtn=32		{32: Width of the button}
-Same for PosHPreviousBtn, PosWNextBtn, PosHNextBtn, PosWSharedBtn, PosHSharedBtn, PosWPreviousIndexBtn, PosHPreviousIndexBtn, PosWNextIndexBtn, PosHNextIndexBtn, PosWPutGoldBtn, PosHPutGoldBtn, PosWTakeGoldBtn, PosHTakeGoldBtn, PosWStashNameField, PosHStashNameField, PosWStashGoldField, PosHStashGoldField.
+Same for PosHPreviousBtn, PosWNextBtn, PosHNextBtn, PosWSharedBtn, PosHSharedBtn, PosWPreviousIndexBtn, PosHPreviousIndexBtn, PosWNextIndexBtn, PosHNextIndexBtn, PosWPutGoldBtn, PosHPutGoldBtn, PosWTakeGoldBtn, PosHTakeGoldBtn, PosWStashNameField, PosHStashNameField, PosWStashGoldField, PosHStashGoldField, PosWSortBtn, PosHSortBtn.
 
 
 [STATS POINTS]

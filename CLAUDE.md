@@ -20,7 +20,9 @@
 - CI 전용 프로젝트 `.github/build/PlugY.vcxproj`가 있다. 원본과 같은 소스와 Release|Win32 설정이고, 다른 점은 둘이다.
   - VS2022(v143) 툴셋
   - 정적 CRT(`/MT`)
-- `.github/workflows/build.yml`가 push, PR, 수동 실행 때 windows-2022에서 빌드하고 `PlugY` 아티팩트(`PlugY.dll`, `PlugY.pdb`)를 올린다. 사용자는 이 아티팩트로 테스트한다.
+- `.github/workflows/build.yml`가 push, PR, 수동 실행 때 windows-2022에서 빌드하고 `PlugY` 아티팩트를 올린다. 사용자는 이 아티팩트로 테스트한다.
+  - 아티팩트는 게임 폴더 구조와 같다. 최상위에 `PlugY.dll`, `PlugY.pdb`가 있고, `PlugY\`에 `PlugYInstaller/PlugY/`의 데이터 파일(dc6, `LocalizedStrings.ini` 등)이 있다.
+  - 새 이미지나 문자열을 추가하면 DLL만으로는 동작하지 않는다. `PlugY\`의 파일도 함께 복사해야 한다(없는 dc6는 "Don't find Buttons Images File" 오류로 종료된다).
 - `PlugY/`에 .cpp를 추가하면 `.github/build/PlugY.vcxproj`의 `ClCompile` 목록에도 추가한다.
 - Linux에서는 `tools/check_syntax.sh`로 clang 문법 검사만 할 수 있다. 필요한 패키지는 `clang`과 `mingw-w64-i686-dev`이다.
   - 이 검사는 링크를 하지 않는다. 함수 시그니처를 바꾸면 헤더 선언과 모든 호출부를 직접 grep으로 확인한다(PR #2의 LNK2001이 이렇게 생겼다).
@@ -87,6 +89,45 @@
 | 골드 필드 클릭 판정 | 8B6B0 (함수 시작) | 8FA30 | 89921 (call) |
 | IsLodGame 변수 | 119854 | 1087B4 | 3A04F4 |
 
+## 창고 정렬 버튼 (`SortStash.cpp`, `sortStashCore.h`)
+
+- 사용자가 준 웹앱 정렬 로직 `sort_stash.js`의 `sortPlugyAllPages`를 옮긴 것이다. 원본 JS는 저장소에 없다.
+  - 정렬은 `compareSortableItems`, 배치는 `packSortedItems`(groupBreak, rowBreak 켬)이다.
+  - 오름차순이다. 노말부터 유니크 순으로 첫 페이지부터 채운다.
+- 사용자가 정한 차이:
+  - 룬워드는 품질 다음에 룬워드(runes.txt 행 순서)로 묶는다. 룬워드마다 새 페이지이고, 그 안에서는 원래 키(무기/방어구, 부위, 종류 등)로 정렬한다.
+    - 룬워드는 소켓의 룬을 runes.txt 행과 맞춰서 찾는다(`getRunewordRow`). D2Common #10822 `ITEMS_GetRunesTxtRecordFromItem`(D2MOO)과 같은 규칙이다. 순서대로 같은 룬이고, Etypes에 없고 Itypes에 있어야 한다.
+  - 12차 키(그림 변형)는 `ItemData+0x49`(`varGfx`, D2MOO `nInvGfxIdx`)이다. 같은 그림끼리 붙이기만 하고, 줄은 나누지 않는다(JS와 같음).
+  - 13차 키(표시 이름)는 아이템 코드, 그다음 유니크/세트 행 번호로 비교한다. 게임 언어와 무관하다.
+  - 세트 순서는 이름 대신 sets.txt 행 순서이다.
+  - 정렬이 끝나면 그 창고 모든 페이지의 이름과 인덱스 플래그를 지운다.
+  - 채팅 명령어는 없다. 창고 버튼만 있다.
+- 사용자에게 확인받지 않은 차이:
+  - `MaxPersonnalPages`/`MaxSharedPages`로 페이지가 모자라면 JS 공유창고 경로처럼 그룹/줄 구분 없이 다시 배치한다. 그래도 모자라면 아무것도 옮기지 않는다.
+- 버튼 조건: `ActiveMultiPageStash=1`, `ActiveBigStash=1`, 1.13c/1.13d/1.14d이다(`active_sortStash` = `active_bigStash && active_classicBigStash`).
+  - 버튼 그림은 `PlugY\SortBtns.dc6`이다. 사용자가 고른 시안 9번(금색 순환 화살표)이다.
+  - 그림은 `tools/make_sort_btn.py <act1 pal.dat>`로 만든다. 팔레트는 저작권 파일이라 커밋하지 않는다.
+  - 기본 위치는 아래 버튼 줄(Y=0x40)이다. X는 800x600에서 0xE0(다음 인덱스 버튼 오른쪽), 640x480에서 0x4F(공유 버튼 왼쪽)이다.
+- 동작 흐름:
+  - 클라이언트 버튼이 `US_SORT_STASH`를 보내면 서버가 `sortStash`를 실행한다. 서버가 정렬하고 아이템을 옮긴다.
+  - 서버는 아이템마다 `UC_SORT_ITEM`(unitId, 페이지, x|y<<8)을 보내고, 마지막에 `UC_SORT_DONE`을 보낸다.
+  - 클라이언트는 unitId로 아이템을 찾아 같은 이동을 한다(`moveStashItems`). 계산은 서버만 한다.
+  - 아이템의 unitId(GUID)는 `Unit+0x0C`이다. PlugY 구조체에서는 이름이 `nItemNum`이다(`UNIT_GUID`). `Unit::nUnitId`(+0x08)는 메모리 풀 포인터라서 싱글에서 0이다.
+    - 처음에 `nUnitId`를 써서 모든 아이템이 ID 0으로 전송됐다. 그 결과 클라이언트가 같은 아이템을 세 번 옮겼고, 아이템이 사라지고 페이지를 넘길 때 게임이 멈췄다.
+- D2Common 동작은 D2MOO(https://github.com/ThePhrozenKeep/D2MOO, 1.10f)의 `source/D2Common/src/D2Inventory.cpp`로 확인한다.
+  - `D2InvAddItem`(#10249)은 `INVENTORY_PlaceItemInGrid`이다. 칸이 비어 있지 않으면 목록에 연결하기 전에 FALSE를 돌려준다. 이때 그 아이템은 어디에도 속하지 않게 된다.
+  - 이 함수는 아이템의 `pNextItem`을 바꾸지 않는다. `changeToSelectedStash`가 목록을 이어서 넣을 수 있는 이유가 이것이다.
+  - `D2InvRemoveItem`(#10243)은 next/prev, 격자 연결, `nNodePos`, `nNodePosOther`(PlugY의 `ItemData2`)를 지운다. 격자 칸은 아이템의 현재 좌표(`tGameCoords`, `path->x/y`)로 지운다.
+- 아이템 이동은 `changeToSelectedStash_10`과 같은 방식이다.
+  - 현재 페이지는 `D2InvRemoveItem`(`ItemData2` 보존)으로 빼고 `D2InvAddItem`으로 넣는다.
+  - 다른 페이지는 `ptListItem` 목록에 넣고 `path->x/y`를 쓴다.
+- 무기/방어구/부위/클래스 판정은 `D2CheckItemType`(Equiv 체인)으로 한다. 아이템 타입 행은 코드로 찾는다(`loadTypeIndex`, `PlugY.log`에 기록).
+- `sortStashCore.h`는 게임 함수를 쓰지 않는다. Linux에서 `tools/sort_stash_test.cpp`로 빌드해 JS 결과와 비교할 수 있다.
+  ```
+  g++ -o sort_stash_test tools/sort_stash_test.cpp
+  ./sort_stash_test [gridW gridH maxPages] < items.txt
+  ```
+
 ## 바이너리 분석 방법
 
 - 사용자가 올린 파일로 버전을 확인한다.
@@ -124,6 +165,17 @@
 9. LoD 회귀: 창고(BigStash 켬/끔), 기존 `.d2x`와 `_LOD_` 파일, 스탯/스킬/룬워드 페이지
 10. 예외: 클래식 → LoD 전환 캐릭터, LoD 미설치 환경의 BigStash 배경
 
+창고 정렬 버튼 (1.13c LoD에서 정렬 결과, 정렬 뒤 페이지 이동, 재접속, 룬워드 페이지, 같은 그림 묶기를 확인했다. 나머지는 아직 확인하지 않았다):
+
+11. 버튼: BigStash 켬일 때만 보인다. 그림(보통/눌림), 팝업, 800x600과 640x480 위치가 다른 버튼이나 닫기 버튼과 겹치지 않는다.
+12. 정렬 결과: 품질 블록 순서, 그룹마다 새 페이지, 같은 아이템끼리 한 줄, 룬/보석/참 순서, 세트는 세트별 페이지, 룬워드는 룬워드별 페이지, 같은 그림의 링/아뮬렛/참/주얼이 붙어 있음
+13. 페이지: 모자라면 페이지가 생긴다. 이름과 인덱스가 지워진다. 페이지를 오가도 위치가 같다.
+14. 저장: `/save`와 재접속 후 위치가 유지된다. 남는 빈 페이지가 없어진다.
+15. 공유 창고와 클래식(SC/HC), LoD 각각
+16. TCP/IP 클라이언트: 정렬 후 화면과 저장 결과가 같다.
+17. `MaxPersonnalPages`를 작게 하면 그룹 구분 없이 배치된다. 그래도 모자라면 아무것도 옮기지 않는다.
+18. 첫 정렬 뒤 `PlugY.log`에 `sortStash : item type weap = ...` 줄이 있고, 값이 -1이 아니다(warl만 -1).
+
 ## 남은 것
 
 - 1.09b - 1.12에서 BigStash를 켜면 클래식 창고는 원래 6x4 화면 그대로다. 해당 버전 D2Client 분석이 필요하다.
@@ -137,3 +189,5 @@
 - PR #3: 1.13c Fog #10227 패치 위치 수정 (`8CC05` → `8CC06`)
 - PR #4: 1.13d / 1.14d BigStash 클래식 화면
 - PR #5: `README.md` 재작성
+- PR #6: `CLAUDE.md`와 검증 도구(`tools/`) 추가
+- PR #7: 창고 정렬 버튼 (`SortStash.cpp`, `sortStashCore.h`, `SortBtns.dc6`), CI 아티팩트에 `PlugY\` 데이터 파일 포함

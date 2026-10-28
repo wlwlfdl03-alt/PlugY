@@ -12,6 +12,7 @@
 #include "infinityStash.h"
 #include "plugYFiles.h"		// Install_PlugYImagesFiles()
 #include "bigStash.h"		// isLodStashLayout()
+#include "sortStash.h"		// active_sortStash
 #include "common.h"
 #include <stdio.h>
 
@@ -28,6 +29,7 @@ static struct
 			DWORD putGold:1;
 			DWORD takeGold:1;
 			DWORD stashName:1;
+			DWORD sort:1;
 		};
 	};
 } isDownBtn;
@@ -69,6 +71,10 @@ int posXStashGoldField = -1;
 int posYStashGoldField = -1;
 int posWStashGoldField = 152;
 int posHStashGoldField = 18;
+int posXSortBtn = -1;
+int posYSortBtn = -1;
+int posWSortBtn = 32;
+int posHSortBtn = 32;
 
 
 DWORD PersonalNormalPageColor = WHITE;
@@ -97,6 +103,8 @@ DWORD	getXStashNameField()	{return RX(posXStashNameField<0 ? 0x4A : posXStashNam
 DWORD	getYStashNameField()	{return RY(posYStashNameField<0 ? isLodStashLayout()?0x19A:0xD6 : posYStashNameField);}
 DWORD	getXStashGoldField()	{return RX(posXStashGoldField<0 ? 0x61 : posXStashGoldField);}
 DWORD	getYStashGoldField()	{return RY(posYStashGoldField<0 ? isLodStashLayout()?0x1B6:0xF2 : posYStashGoldField);}
+DWORD	getXSortBtn()			{return RX(posXSortBtn<0 ? D2GetResolution()?0xE0:0x4F : posXSortBtn);}
+DWORD	getYSortBtn()			{return RY(posYSortBtn<0 ? 0x40 : posYSortBtn);}
 
 //closeBtn x: D2C=0x113 LOD=0x110(0->0x28)		y: D2C=0x41 LOD=0x40 (-0x23 -> 5)
 //Diablo II Classic stash (without big stash) : gold field and max gold text are lower (gold field y: D2C=0xF2 LOD=0x1B6, text y: D2C=0xDB LOD=0x19F)
@@ -111,6 +119,7 @@ DWORD	getYStashGoldField()	{return RY(posYStashGoldField<0 ? isLodStashLayout()?
 #define isOnButtonTakeGold(x,y) isOnRect(x, y, getXTakeGoldBtn(), getYTakeGoldBtn(), posWTakeGoldBtn, posHTakeGoldBtn)
 #define isOnStashNameField(x,y) isOnRect(x, y, getXStashNameField(), getYStashNameField(), posWStashNameField, posHStashNameField)
 #define isOnStashGoldField(x,y) isOnRect(x, y, getXStashGoldField(), getYStashGoldField(), posWStashGoldField, posHStashGoldField)
+#define isOnButtonSortStash(x,y) isOnRect(x, y, getXSortBtn(), getYSortBtn(), posWSortBtn, posHSortBtn)
 
 void UpdateStashPosition()
 {
@@ -179,6 +188,13 @@ void* STDCALL printBtns()
 		D2PrintImage(&data, getXTakeGoldBtn(), getYTakeGoldBtn(), -1, 5, 0);
 	}
 
+	if (active_sortStash)
+	{
+		setImage(&data, sortBtnsImages);
+		setFrame(&data, 0 + isDownBtn.sort);
+		D2PrintImage(&data, getXSortBtn(), getYSortBtn(), -1, 5, 0);
+	}
+
 
 	LPWSTR lpText;
 	DWORD mx = D2GetMouseX();
@@ -218,6 +234,10 @@ void* STDCALL printBtns()
 	} else if (active_sharedGold && isOnButtonTakeGold(mx,my))	{
 		lpText = getLocalString(STR_TAKE_GOLD);
 		D2PrintPopup(lpText, getXTakeGoldBtn()+posWTakeGoldBtn/2, getYTakeGoldBtn()-posHTakeGoldBtn, WHITE, 1);
+
+	} else if (active_sortStash && isOnButtonSortStash(mx,my))	{
+		lpText = getLocalString(STR_STASH_SORT);
+		D2PrintPopup(lpText, getXSortBtn()+posWSortBtn/2, getYSortBtn()-posHSortBtn, WHITE, 1);
 	}
 
 	return D2LoadBuySelBtn();
@@ -242,6 +262,8 @@ DWORD STDCALL manageBtnDown(sWinMessage* msg)
 		isDownBtn.putGold = 1;
 	else if (active_sharedGold && isOnButtonTakeGold(msg->x,msg->y))
 		isDownBtn.takeGold = 1;
+	else if (active_sortStash && isOnButtonSortStash(msg->x,msg->y))
+		isDownBtn.sort = 1;
 	else if (isOnStashNameField(msg->x,msg->y))
 		isDownBtn.stashName = 1;
 	else return 0;
@@ -307,6 +329,11 @@ DWORD STDCALL manageBtnUp(sWinMessage* msg)
 		log_msg("push up left take gold\n");
 		if (isDownBtn.takeGold)
 			updateServer(US_TAKEGOLD);
+
+	} else if (active_sortStash && isOnButtonSortStash(msg->x,msg->y)) {
+		log_msg("push up left sort stash\n");
+		if (isDownBtn.sort)
+			updateServer(US_SORT_STASH);
 
 	} else if (isOnStashNameField(msg->x,msg->y)) {
 		log_msg("push up left Stash Name\n");
