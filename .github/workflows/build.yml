@@ -16,9 +16,14 @@ jobs:
       - name: Build PlugY.dll (Release|Win32)
         run: msbuild .github\build\PlugY.vcxproj /p:Configuration=Release /p:Platform=Win32 /m
 
+      # Same layout as the Diablo II folder : PlugY.dll next to Game.exe, data files in PlugY\.
+      - name: Collect files
+        run: |
+          New-Item -ItemType Directory -Force artifact\PlugY | Out-Null
+          Copy-Item build\Release\PlugY.dll, build\Release\PlugY.pdb artifact\
+          Copy-Item PlugYInstaller\PlugY\* artifact\PlugY\
+
       - uses: actions/upload-artifact@v4
         with:
           name: PlugY
-          path: |
-            build/Release/PlugY.dll
-            build/Release/PlugY.pdb
+          path: artifact/
