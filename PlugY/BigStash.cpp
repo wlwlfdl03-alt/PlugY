@@ -178,7 +178,7 @@ void Install_BigStash()
 		D2isExpansionInstalled = offset_D2Client + 0xBF8C;
 
 		// Load stash background even in Classic install
-		mem_seek R8(D2Client, 0000, 0000, 0000, 0000, 0000, 0000, 8CC05, 0000, 0000);
+		mem_seek R8(D2Client, 0000, 0000, 0000, 0000, 0000, 0000, 8CC06, 0000, 0000);
 		MEMC_REF4( D2isExpansionInstalled, caller_loadTradeStash);
 		//6FB3CC05  |. E8 82F3F7FF    CALL <JMP.&Fog.#10227>
 
