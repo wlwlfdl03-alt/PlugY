@@ -200,3 +200,5 @@
 - PR #6: `CLAUDE.md`와 검증 도구(`tools/`) 추가
 - PR #7: 창고 정렬 버튼 (`SortStash.cpp`, `sortStashCore.h`, `SortBtns.dc6`), CI 아티팩트에 `PlugY\` 데이터 파일 포함
 - PR #8: 창고 정렬을 클라이언트도 직접 계산하고 서버는 체크섬만 보냄 (TCP/IP 큰 창고에서 메시지가 유실되던 문제 수정)
+- PR #9: PR #8 뒤 창고 정렬 인게임 테스트 결과를 `CLAUDE.md`에 기록
+- PR #10: `README.md`에 창고 정렬 버튼 추가
