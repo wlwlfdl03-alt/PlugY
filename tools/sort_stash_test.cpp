@@ -5,7 +5,7 @@ Test driver of PlugY/sortStashCore.h on Linux (no game needed) :
   ./sort_stash_test [gridW gridH maxPages] < items.txt
 
 Input : one item per line
-  unitId code itype width height quality runeword ethereal weapon armor bodyPos specialRank tier setKey row
+  unitId code itype width height quality isRuneword ethereal weapon armor bodyPos specialRank tier setKey row runeword picture
 Output : "pages N compact C" then one line per item, in input order : "unitId page x y".
 */
 #include <stdio.h>
@@ -22,8 +22,9 @@ int main(int argc, char** argv)
 	SortItem it;
 	int rw, eth, weap, arm;
 	memset(&it, 0, sizeof(it));
-	while (scanf("%u %4s %4s %d %d %d %d %d %d %d %d %d %d %d %d", &it.unitId, it.code, it.itype, &it.width, &it.height,
-			&it.quality, &rw, &eth, &weap, &arm, &it.bodyPos, &it.specialRank, &it.tier, &it.setKey, &it.row) == 15)
+	while (scanf("%u %4s %4s %d %d %d %d %d %d %d %d %d %d %d %d %d %d", &it.unitId, it.code, it.itype, &it.width, &it.height,
+			&it.quality, &rw, &eth, &weap, &arm, &it.bodyPos, &it.specialRank, &it.tier, &it.setKey, &it.row,
+			&it.runeword, &it.picture) == 17)
 	{
 		it.isRuneword = rw != 0;
 		it.isEthereal = eth != 0;

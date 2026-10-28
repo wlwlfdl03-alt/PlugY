@@ -6,7 +6,7 @@
 	so this file is also built on Linux by tools/sort_stash_test.cpp.
 
 	Differences with sort_stash.js :
-	- key 12 (picture variant) is not used,
+	- runewords are grouped by runeword (row in runes.txt, a new page for each one) before the other keys,
 	- key 13 (display name) is the item code then the unique/set row,
 	- the sets are ordered by their row in sets.txt, not by name,
 	- equal items keep the order of their unit id.
@@ -37,6 +37,8 @@ struct SortItem
 	int		tier;				// 0 normal, 1 exceptional, 2 elite
 	int		setKey;				// row of the set in sets.txt (set items)
 	int		row;				// row in uniqueitems.txt / setitems.txt (unique and set items), else 0
+	int		runeword;			// row in runes.txt (runeword items)
+	int		picture;			// picture variant of the item (rings, amulets, charms, jewels)
 
 	// Computed by sortStashPrepare().
 	int		sortQuality;
@@ -240,6 +242,8 @@ static int sortStrCmpLower(const char* a, const char* b)
 static int sortCompareItems(const SortItem* a, const SortItem* b)
 {
 	SORT_CMP_INT(a->sortQuality, b->sortQuality);
+	if (a->sortQuality == SORT_QUALITY_RUNEWORD)
+		SORT_CMP_INT(a->runeword, b->runeword);
 	if (a->sortQuality == SORT_QUALITY_SET)
 	{
 		SORT_CMP_INT(a->setKey, b->setKey);
@@ -258,6 +262,7 @@ static int sortCompareItems(const SortItem* a, const SortItem* b)
 		SORT_CMP_INT(a->tier, b->tier);
 		SORT_CMP_INT(a->innerOrder, b->innerOrder);
 		SORT_CMP_STR(a->groupItem, b->groupItem);
+		SORT_CMP_INT(a->picture, b->picture);
 	}
 	SORT_CMP_STR(a->code, b->code);
 	SORT_CMP_INT(a->row, b->row);
@@ -270,6 +275,7 @@ static bool sortSameGroup(const SortItem* a, const SortItem* b)
 {
 	if (a->sortQuality != b->sortQuality) return false;
 	if (a->sortQuality == SORT_QUALITY_SET) return a->setKey == b->setKey;
+	if (a->sortQuality == SORT_QUALITY_RUNEWORD) return a->runeword == b->runeword;
 	bool aMisc = sortIsMisc(a);
 	if (aMisc != sortIsMisc(b)) return false;
 	if (!aMisc)

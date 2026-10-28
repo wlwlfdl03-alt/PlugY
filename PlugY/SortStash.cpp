@@ -86,6 +86,50 @@ static bool isType(Unit* ptItem, int t)
 	return typeIndex[t] >= 0 && D2CheckItemType(ptItem, typeIndex[t]);
 }
 
+#define SORT_NO_RUNEWORD 0x7FFFFFFF
+
+/*
+Row of runes.txt of a runeword item, found like ITEMS_GetRunesTxtRecordFromItem of D2Common (#10822 in 1.10, see D2MOO) :
+the socketed runes match the runes of the row (in the same order) and the type of the item is allowed by the row.
+*/
+static int getRunewordRow(Unit* ptItem)
+{
+	if (!ptItem->ptItemData->isRuneword || !ptItem->ptInventory)
+		return SORT_NO_RUNEWORD;
+
+	int socketed[6] = {0, 0, 0, 0, 0, 0};
+	int nbSocketed = 0;
+	for (Unit* ptRune = D2InventoryGetFirstItem(ptItem->ptInventory); ptRune && nbSocketed < 6; ptRune = D2UnitGetNextItem(ptRune))
+		socketed[nbSocketed++] = ptRune->nTxtFileNo;
+
+	int nbRunewords = *D2GetNbRunesBIN();
+	RunesBIN* runesFirst = nbRunewords > 1 ? D2GetRunesBIN(1) - 1 : NULL;	// like NewInterface_Runewords.cpp
+	for (int i = 0; runesFirst && i < nbRunewords; i++)
+	{
+		RunesBIN* runeword = runesFirst + i;
+		if (!runeword->Complete)
+			continue;
+
+		bool match = true;
+		for (int r = 0; match && r < 6 && runeword->Runes[r] > 0; r++)
+			if (nbSocketed < r || socketed[r] != runeword->Runes[r])
+				match = false;
+		if (!match)
+			continue;
+
+		bool excluded = false;
+		for (int t = 0; !excluded && t < 3 && runeword->Etypes[t]; t++)
+			excluded = D2CheckItemType(ptItem, runeword->Etypes[t]) != 0;
+		if (excluded)
+			continue;
+
+		for (int t = 0; t < 6 && runeword->Itypes[t]; t++)
+			if (D2CheckItemType(ptItem, runeword->Itypes[t]))
+				return i;
+	}
+	return SORT_NO_RUNEWORD;
+}
+
 static void fillSortItem(SortItem* item, Unit* ptItem)
 {
 	ItemsBIN* itemsBIN = D2GetItemsBIN(ptItem->nTxtFileNo);
@@ -129,6 +173,8 @@ static void fillSortItem(SortItem* item, Unit* ptItem)
 		item->setKey = SgptDataTables->setItems[data->uniqueID].setId;
 	if (data->quality == ITEMQUALITY_SET || data->quality == ITEMQUALITY_UNIQUE)
 		item->row = data->uniqueID;
+	item->runeword = getRunewordRow(ptItem);
+	item->picture = data->varGfx;
 }
 
 
