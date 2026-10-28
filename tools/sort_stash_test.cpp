@@ -38,7 +38,7 @@ int main(int argc, char** argv)
 
 	SortPlace* places = (SortPlace*)malloc((nb ? nb : 1) * sizeof(SortPlace));
 	bool compact;
-	int pages = sortStashPlan(items, nb, gridW, gridH, maxPages, places, &compact);
+	int pages = sortStashPlan(items, nb, gridW, gridH, maxPages, -1, places, &compact);
 	printf("pages %d compact %d\n", pages, compact ? 1 : 0);
 	if (pages >= 0)
 		for (int i = 0; i < nb; i++)
