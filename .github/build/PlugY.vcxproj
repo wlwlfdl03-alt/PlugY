@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- MSVC project for the CI build of PlugY.dll (same sources and options as PlugY\PlugY.vcproj, Release|Win32). -->
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{EB63DF4E-A019-4522-A140-9E8C7350B331}</ProjectGuid>
+    <RootNamespace>PlugY</RootNamespace>
+    <Keyword>Win32Proj</Keyword>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <PlugYSrc>$(MSBuildThisFileDirectory)..\..\PlugY\</PlugYSrc>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <TargetName>PlugY</TargetName>
+    <OutDir>$(MSBuildThisFileDirectory)..\..\build\$(Configuration)\</OutDir>
+    <IntDir>$(MSBuildThisFileDirectory)..\..\build\obj\$(Configuration)\</IntDir>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_CRT_NON_CONFORMING_SWPRINTFS;_CRT_SECURE_NO_WARNINGS;_USRDLL;PLUGY_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <!-- Static CRT : no Visual C++ redistributable needed on the player's computer. -->
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <ConformanceMode>false</ConformanceMode>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <TargetMachine>MachineX86</TargetMachine>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="$(PlugYSrc)BigStash.cpp" />
+    <ClCompile Include="$(PlugYSrc)ClientSaveFile.cpp" />
+    <ClCompile Include="$(PlugYSrc)Commands.cpp" />
+    <ClCompile Include="$(PlugYSrc)Common.cpp" />
+    <ClCompile Include="$(PlugYSrc)CustomLibraries.cpp" />
+    <ClCompile Include="$(PlugYSrc)D2functions.cpp" />
+    <ClCompile Include="$(PlugYSrc)D2wrapper.cpp" />
+    <ClCompile Include="$(PlugYSrc)Error.cpp" />
+    <ClCompile Include="$(PlugYSrc)ExtendedSaveFile.cpp" />
+    <ClCompile Include="$(PlugYSrc)ExtraOptions.cpp" />
+    <ClCompile Include="$(PlugYSrc)GlobalVariable.cpp" />
+    <ClCompile Include="$(PlugYSrc)InfinityStash.cpp" />
+    <ClCompile Include="$(PlugYSrc)INIfile.cpp" />
+    <ClCompile Include="$(PlugYSrc)Interface_Skills.cpp" />
+    <ClCompile Include="$(PlugYSrc)Interface_Stash.cpp" />
+    <ClCompile Include="$(PlugYSrc)Interface_Stats.cpp" />
+    <ClCompile Include="$(PlugYSrc)Language.cpp" />
+    <ClCompile Include="$(PlugYSrc)LoadPlayerData.cpp" />
+    <ClCompile Include="$(PlugYSrc)LocalizedStrings.cpp" />
+    <ClCompile Include="$(PlugYSrc)MainScreen.cpp" />
+    <ClCompile Include="$(PlugYSrc)ModifMemory.cpp" />
+    <ClCompile Include="$(PlugYSrc)NewInterface_CubeListing.cpp" />
+    <ClCompile Include="$(PlugYSrc)NewInterface_Runewords.cpp" />
+    <ClCompile Include="$(PlugYSrc)NewInterface_Stats.cpp" />
+    <ClCompile Include="$(PlugYSrc)NewInterface_StatsPageTwo.cpp" />
+    <ClCompile Include="$(PlugYSrc)NewInterfaces.cpp" />
+    <ClCompile Include="$(PlugYSrc)OthersFeatures.cpp" />
+    <ClCompile Include="$(PlugYSrc)Parameters.cpp" />
+    <ClCompile Include="$(PlugYSrc)PlayerCustomData.cpp" />
+    <ClCompile Include="$(PlugYSrc)PlugY.cpp" />
+    <ClCompile Include="$(PlugYSrc)PlugYFiles.cpp" />
+    <ClCompile Include="$(PlugYSrc)SavePath.cpp" />
+    <ClCompile Include="$(PlugYSrc)SavePlayerData.cpp" />
+    <ClCompile Include="$(PlugYSrc)SharedSaveFile.cpp" />
+    <ClCompile Include="$(PlugYSrc)SkillPerLevelUp.cpp" />
+    <ClCompile Include="$(PlugYSrc)SkillsPoints.cpp" />
+    <ClCompile Include="$(PlugYSrc)StatPerLevelUp.cpp" />
+    <ClCompile Include="$(PlugYSrc)StatsPoints.cpp" />
+    <ClCompile Include="$(PlugYSrc)UberQuest.cpp" />
+    <ClCompile Include="$(PlugYSrc)UpdateClient.cpp" />
+    <ClCompile Include="$(PlugYSrc)UpdateServer.cpp" />
+    <ClCompile Include="$(PlugYSrc)Windowed.cpp" />
+    <ClCompile Include="$(PlugYSrc)WorldEvent.cpp" />
+    <ClCompile Include="$(PlugYSrc)..\Commons\VersionInfo.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="$(PlugYSrc)PlugY.rc" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>

@@ -334,7 +334,7 @@ bool renameCharacter(Unit* ptChar, char* newName)
 	log_msg("Rename Character : %s -> %s\n", PCPlayerData->name, newName);
 
 	// Move current save file
-	backupSaveFiles(PCPlayerData->name, -1);
+	backupSaveFiles(PCPlayerData->name, -1, D2isLODGame() != 0);
 	{
 		char szCurrentFile[MAX_PATH];
 		char szNewFile[MAX_PATH];
