@@ -701,7 +701,7 @@ Following are default values, between {} are some examples values with descripti
 [STASH]
 Increase the stash to 10x10 squares.
 Use PlugY\TradeStash.dc6 to change the background image.
-In Diablo II Classic games, the big stash uses the same stash screen as LoD (only with LoD 1.13c, other versions keep the Classic stash).
+In Diablo II Classic games, the big stash uses the same stash screen as LoD (only with LoD 1.13c, 1.13d and 1.14d, other versions keep the Classic stash).
 When bigStash is enabled, you must restart D2 for play in single/multi/open when you have started a game in closed Bnet previously (and vice versa).
 Following are default values, between {} are some examples values with descriptions :
 - ActiveBigStash=0	{0:Default stash size is used; 1: Enabled, Stash uses 10x10 squared}
