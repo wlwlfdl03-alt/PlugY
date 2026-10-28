@@ -38,3 +38,5 @@
 **/*.VC.VC.opendb
 **/UpgradeLog*
 /PlugYRun/PlugYRun.aps
+!/.github/build/*.vcxproj
+/build/
