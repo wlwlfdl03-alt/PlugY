@@ -20,4 +20,4 @@ Original PlugY by Yohann NICOLAS ([ChaosMarc/PlugY](https://github.com/ChaosMarc
 
 ## Stash sort
 
-- A sort button on the big stash screen (`ActiveBigStash=1`, 1.13c, 1.13d, 1.14d) sorts the items of all the pages of the stash shown (personal or shared), in LoD and Classic games.
+- A sort button on the big stash screen (`ActiveMultiPageStash=1`, `ActiveBigStash=1`, 1.13c, 1.13d, 1.14d) sorts the items of all the pages of the stash shown (personal or shared), in LoD and Classic games.
