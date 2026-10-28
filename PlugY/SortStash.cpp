@@ -26,6 +26,10 @@ bool active_sortStash = false;
 
 /****************************** Item data ******************************/
 
+// Unit id (GUID) of an item, the same on the server and the client : Unit+0C (nItemNum in D2UnitStruct.h,
+// dwUnitId of D2UnitStrc in D2MOO). Unit+08 (nUnitId) isn't it.
+#define UNIT_GUID(U) ((U)->nItemNum)
+
 static void codeToString(DWORD code, char* str)
 {
 	int len = 0;
@@ -89,7 +93,7 @@ static void fillSortItem(SortItem* item, Unit* ptItem)
 
 	ZeroMemory(item, sizeof(SortItem));
 	item->unit = ptItem;
-	item->unitId = ptItem->nUnitId;
+	item->unitId = UNIT_GUID(ptItem);
 	codeToString(itemsBIN->ItemCode, item->code);
 	ItemTypesBIN* itemType = D2GetItemTypesBIN(itemsBIN->Type);
 	codeToString(itemType ? itemType->code : 0, item->itype);
@@ -206,7 +210,7 @@ static void moveStashItems(Unit* ptChar, Stash* first, Unit** items, SortPlace* 
 		{
 			ptItem->ptItemData->ptNextItem = NULL;
 			if (!D2InvAddItem(PCInventory, ptItem, places[i].x, places[i].y, 0xC, isClient, 4))
-				log_msg("sortStash : can't put item %d at %d,%d of the current page\n", ptItem->nUnitId, places[i].x, places[i].y);
+				log_msg("sortStash : can't put item %d at %d,%d of the current page\n", UNIT_GUID(ptItem), places[i].x, places[i].y);
 		}
 		else
 		{
@@ -320,14 +324,16 @@ void sortStashClientDone(DWORD nbPages, DWORD isShared, DWORD nbItems)
 	Unit** sorted = (Unit**)malloc((clientNb + 1) * sizeof(Unit*));
 	d2_assert(!sorted, "Error : Memory allocation", __FILE__, __LINE__);
 
+	// Each item of the client must be found once.
 	bool found = nb == clientNb;
 	for (int i = 0; found && i < clientNb; i++)
 	{
 		found = false;
 		for (int j = 0; j < nb; j++)
-			if (units[j]->nUnitId == clientIds[i])
+			if (units[j] && UNIT_GUID(units[j]) == clientIds[i])
 			{
 				sorted[i] = units[j];
+				units[j] = NULL;
 				found = true;
 				break;
 			}

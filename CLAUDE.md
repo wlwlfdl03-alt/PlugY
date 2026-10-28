@@ -110,6 +110,12 @@
   - 클라이언트 버튼이 `US_SORT_STASH`를 보내면 서버가 `sortStash`를 실행한다. 서버가 정렬하고 아이템을 옮긴다.
   - 서버는 아이템마다 `UC_SORT_ITEM`(unitId, 페이지, x|y<<8)을 보내고, 마지막에 `UC_SORT_DONE`을 보낸다.
   - 클라이언트는 unitId로 아이템을 찾아 같은 이동을 한다(`moveStashItems`). 계산은 서버만 한다.
+  - 아이템의 unitId(GUID)는 `Unit+0x0C`이다. PlugY 구조체에서는 이름이 `nItemNum`이다(`UNIT_GUID`). `Unit::nUnitId`(+0x08)는 메모리 풀 포인터라서 싱글에서 0이다.
+    - 처음에 `nUnitId`를 써서 모든 아이템이 ID 0으로 전송됐다. 그 결과 클라이언트가 같은 아이템을 세 번 옮겼고, 아이템이 사라지고 페이지를 넘길 때 게임이 멈췄다.
+- D2Common 동작은 D2MOO(https://github.com/ThePhrozenKeep/D2MOO, 1.10f)의 `source/D2Common/src/D2Inventory.cpp`로 확인한다.
+  - `D2InvAddItem`(#10249)은 `INVENTORY_PlaceItemInGrid`이다. 칸이 비어 있지 않으면 목록에 연결하기 전에 FALSE를 돌려준다. 이때 그 아이템은 어디에도 속하지 않게 된다.
+  - 이 함수는 아이템의 `pNextItem`을 바꾸지 않는다. `changeToSelectedStash`가 목록을 이어서 넣을 수 있는 이유가 이것이다.
+  - `D2InvRemoveItem`(#10243)은 next/prev, 격자 연결, `nNodePos`, `nNodePosOther`(PlugY의 `ItemData2`)를 지운다. 격자 칸은 아이템의 현재 좌표(`tGameCoords`, `path->x/y`)로 지운다.
 - 아이템 이동은 `changeToSelectedStash_10`과 같은 방식이다.
   - 현재 페이지는 `D2InvRemoveItem`(`ItemData2` 보존)으로 빼고 `D2InvAddItem`으로 넣는다.
   - 다른 페이지는 `ptListItem` 목록에 넣고 `path->x/y`를 쓴다.
