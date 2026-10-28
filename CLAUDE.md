@@ -110,8 +110,13 @@
   - 기본 위치는 아래 버튼 줄(Y=0x40)이다. X는 800x600에서 0xE0(다음 인덱스 버튼 오른쪽), 640x480에서 0x4F(공유 버튼 왼쪽)이다.
 - 동작 흐름:
   - 클라이언트 버튼이 `US_SORT_STASH`를 보내면 서버가 `sortStash`를 실행한다. 서버가 정렬하고 아이템을 옮긴다.
-  - 서버는 아이템마다 `UC_SORT_ITEM`(unitId, 페이지, x|y<<8)을 보내고, 마지막에 `UC_SORT_DONE`을 보낸다.
-  - 클라이언트는 unitId로 아이템을 찾아 같은 이동을 한다(`moveStashItems`). 계산은 서버만 한다.
+  - 서버는 결과의 체크섬만 담은 메시지 하나(`UC_SORT_STASH`: 공유/압축 플래그, 아이템 수, 체크섬)를 보낸다.
+  - 클라이언트는 자기 아이템으로 같은 정렬을 직접 계산한다(`planStashSort`, `sortStashClient`). 아이템 수와 체크섬이 서버와 같을 때만 옮긴다(`moveStashItems`). 다르면 아무것도 옮기지 않고 `PlugY.log`에 남긴다.
+  - 결과는 아이템 데이터와 unitId에만 달려 있고 입력 순서와는 무관하다. 동률은 unitId로 정한다.
+    - 그래서 클라이언트에는 서버와 같은 압축 여부만 알려 주면 된다. `MaxPages` 설정이 달라도 상관없다.
+  - 처음에는 아이템마다 `UC_SORT_ITEM`을 보냈다. 이 방식은 TCP/IP에서 실패했다.
+    - 1만 개(585페이지) 창고에서 클라이언트가 10941개 중 7266개만 받았다.
+    - 마지막 메시지를 받지 못했고, PlugY 화면의 버튼과 아이템이 눌리지 않았다.
   - 아이템의 unitId(GUID)는 `Unit+0x0C`이다. PlugY 구조체에서는 이름이 `nItemNum`이다(`UNIT_GUID`). `Unit::nUnitId`(+0x08)는 메모리 풀 포인터라서 싱글에서 0이다.
     - 처음에 `nUnitId`를 써서 모든 아이템이 ID 0으로 전송됐다. 그 결과 클라이언트가 같은 아이템을 세 번 옮겼고, 아이템이 사라지고 페이지를 넘길 때 게임이 멈췄다.
 - D2Common 동작은 D2MOO(https://github.com/ThePhrozenKeep/D2MOO, 1.10f)의 `source/D2Common/src/D2Inventory.cpp`로 확인한다.

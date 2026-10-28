@@ -9,8 +9,7 @@
 extern bool active_sortStash;
 
 void sortStash(Unit* ptChar);
-void sortStashClientItem(DWORD unitId, DWORD page, DWORD pos);
-void sortStashClientDone(DWORD nbPages, DWORD isShared, DWORD nbItems);
+void sortStashClient(DWORD flags, DWORD nbItems, DWORD checksum);
 
 void Install_SortStash();
 

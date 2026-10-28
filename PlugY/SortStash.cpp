@@ -3,8 +3,9 @@
 
 	Sort the items of all the pages of the stash shown (personal or shared) :
 	the order and the places come from sortStashCore.h.
-	The server sorts and moves its items, then sends the place of each item (UC_SORT_ITEM)
-	and the client does the same moves (UC_SORT_DONE). The names and the index flags of the pages are removed.
+	The server and the client both compute the sort and move their own items. The server sends one message
+	(UC_SORT_STASH) with a checksum of its result, the client moves its items only when its result is the same.
+	The names and the index flags of the pages are removed.
 
 	Only with the big stash in 1.13c, 1.13d and 1.14d (10x10 stash in LoD and Classic games).
 
@@ -279,119 +280,93 @@ static void moveStashItems(Unit* ptChar, Stash* first, Unit** items, SortPlace* 
 }
 
 
+/****************************** Sort ******************************/
+
+/*
+Both the server and the client compute the sort with their own copy of the items : the result only depends
+on the item data and the unit ids, the same on both sides. The server only sends a checksum of its result
+(a stash can have thousands of items : one message per item was too much for the network in TCP/IP).
+*/
+struct StashSort
+{
+	Stash*		first;
+	Unit**		units;
+	SortItem*	items;
+	SortPlace*	places;
+	int			nb;
+	int			nbPages;
+	bool		compact;
+};
+
+static void freeStashSort(StashSort* sort)
+{
+	free(sort->units);
+	free(sort->items);
+	free(sort->places);
+}
+
+// force : -1 to choose the packing with maxPages, 0 normal packing, 1 compact packing.
+static void planStashSort(Unit* ptChar, bool isShared, DWORD maxPages, int force, StashSort* sort)
+{
+	loadTypeIndex();
+	sort->first = firstPage(ptChar, isShared);
+	sort->nb = getStashItems(ptChar, sort->first, &sort->units);
+	sort->items = (SortItem*)malloc((sort->nb + 1) * sizeof(SortItem));
+	sort->places = (SortPlace*)malloc((sort->nb + 1) * sizeof(SortPlace));
+	d2_assert(!sort->items || !sort->places, "Error : Memory allocation", __FILE__, __LINE__);
+	for (int i = 0; i < sort->nb; i++)
+		fillSortItem(&sort->items[i], sort->units[i]);
+	sort->nbPages = sortStashPlan(sort->items, sort->nb, SORT_GRID_X, SORT_GRID_Y, maxPages, force, sort->places, &sort->compact);
+}
+
+
 /****************************** Server ******************************/
 
 void sortStash(Unit* ptChar)
 {
 	if (!active_sortStash || !PCPY->currentStash)
 		return;
-	loadTypeIndex();
 
 	bool isShared = PCPY->currentStash->isShared != 0;
-	Stash* first = firstPage(ptChar, isShared);
-	Unit** units;
-	int nb = getStashItems(ptChar, first, &units);
-
-	SortItem* items = (SortItem*)malloc((nb + 1) * sizeof(SortItem));
-	SortPlace* places = (SortPlace*)malloc((nb + 1) * sizeof(SortPlace));
-	d2_assert(!items || !places, "Error : Memory allocation", __FILE__, __LINE__);
-	for (int i = 0; i < nb; i++)
-		fillSortItem(&items[i], units[i]);
-
 	// Number of pages allowed (MaxPersonnalPages / MaxSharedPages), 0 : no limit.
 	DWORD maxPages = (isShared ? maxSharedPages : maxSelfPages) + 1;
-	bool compact;
-	int nbPages = sortStashPlan(items, nb, SORT_GRID_X, SORT_GRID_Y, maxPages, places, &compact);
-	log_msg("sortStash : %d items of the %s stash -> %d pages%s\n", nb, isShared ? "shared" : "personal", nbPages, compact ? " (compact)" : "");
+	StashSort sort;
+	planStashSort(ptChar, isShared, maxPages, -1, &sort);
+	log_msg("sortStash : %d items of the %s stash -> %d pages%s\n", sort.nb, isShared ? "shared" : "personal", sort.nbPages, sort.compact ? " (compact)" : "");
 
-	if (nbPages >= 0)
+	if (sort.nbPages >= 0)
 	{
-		moveStashItems(ptChar, first, units, places, nb, nbPages, false);
-		for (int i = 0; i < nb; i++)
-			updateClient(ptChar, UC_SORT_ITEM, items[i].unitId, places[i].page, places[i].x | (places[i].y << 8));
-		updateClient(ptChar, UC_SORT_DONE, nbPages, isShared, nb);
+		DWORD checksum = sortStashChecksum(sort.items, sort.places, sort.nb, sort.nbPages);
+		moveStashItems(ptChar, sort.first, sort.units, sort.places, sort.nb, sort.nbPages, false);
+		updateClient(ptChar, UC_SORT_STASH, (isShared ? 1 : 0) | (sort.compact ? 2 : 0), sort.nb, checksum);
 	}
 	else
 		log_msg("sortStash : not enough pages, nothing moved\n");
 
-	free(units);
-	free(items);
-	free(places);
+	freeStashSort(&sort);
 }
 
 
 /****************************** Client ******************************/
 
-static DWORD* clientIds = NULL;
-static SortPlace* clientPlaces = NULL;
-static int clientNb = 0;
-static int clientSize = 0;
-
-static void resetClientSort()
-{
-	free(clientIds);
-	free(clientPlaces);
-	clientIds = NULL;
-	clientPlaces = NULL;
-	clientNb = 0;
-	clientSize = 0;
-}
-
-void sortStashClientItem(DWORD unitId, DWORD page, DWORD pos)
-{
-	if (clientNb == clientSize)
-	{
-		clientSize = clientSize ? clientSize * 2 : 128;
-		clientIds = (DWORD*)realloc(clientIds, clientSize * sizeof(DWORD));
-		clientPlaces = (SortPlace*)realloc(clientPlaces, clientSize * sizeof(SortPlace));
-		d2_assert(!clientIds || !clientPlaces, "Error : Memory allocation", __FILE__, __LINE__);
-	}
-	clientIds[clientNb] = unitId;
-	clientPlaces[clientNb].page = page;
-	clientPlaces[clientNb].x = pos & 0xFF;
-	clientPlaces[clientNb].y = (pos >> 8) & 0xFF;
-	clientNb++;
-}
-
-void sortStashClientDone(DWORD nbPages, DWORD isShared, DWORD nbItems)
+void sortStashClient(DWORD flags, DWORD nbItems, DWORD checksum)
 {
 	Unit* ptChar = D2GetClientPlayer();
-	log_msg("sortStashClientDone : %d items, %d pages\n", clientNb, nbPages);
-	if (!ptChar || clientNb != (int)nbItems)
-	{
-		log_msg("sortStashClientDone : %d items received, %d expected\n", clientNb, nbItems);
-		resetClientSort();
+	if (!ptChar || !PCPY->currentStash)
 		return;
-	}
 
-	Stash* first = firstPage(ptChar, isShared != 0);
-	Unit** units;
-	int nb = getStashItems(ptChar, first, &units);
-	Unit** sorted = (Unit**)malloc((clientNb + 1) * sizeof(Unit*));
-	d2_assert(!sorted, "Error : Memory allocation", __FILE__, __LINE__);
+	bool isShared = (flags & 1) != 0;
+	StashSort sort;
+	planStashSort(ptChar, isShared, 0, (flags & 2) ? 1 : 0, &sort);
+	DWORD clientChecksum = sort.nbPages >= 0 ? sortStashChecksum(sort.items, sort.places, sort.nb, sort.nbPages) : 0;
+	log_msg("sortStashClient : %d items -> %d pages, checksum %08X (server : %d items, checksum %08X)\n", sort.nb, sort.nbPages, clientChecksum, nbItems, checksum);
 
-	// Each item of the client must be found once.
-	bool found = nb == clientNb;
-	for (int i = 0; found && i < clientNb; i++)
-	{
-		found = false;
-		for (int j = 0; j < nb; j++)
-			if (units[j] && UNIT_GUID(units[j]) == clientIds[i])
-			{
-				sorted[i] = units[j];
-				units[j] = NULL;
-				found = true;
-				break;
-			}
-	}
-	if (found)
-		moveStashItems(ptChar, first, sorted, clientPlaces, clientNb, nbPages, true);
+	if (sort.nbPages >= 0 && sort.nb == (int)nbItems && clientChecksum == checksum)
+		moveStashItems(ptChar, sort.first, sort.units, sort.places, sort.nb, sort.nbPages, true);
 	else
-		log_msg("sortStashClientDone : the items of the client aren't the items of the server (%d / %d)\n", nb, clientNb);
+		log_msg("sortStashClient : the sort of the client isn't the sort of the server, nothing moved\n");
 
-	free(units);
-	free(sorted);
-	resetClientSort();
+	freeStashSort(&sort);
 }
 
 

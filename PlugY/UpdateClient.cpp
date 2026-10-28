@@ -63,8 +63,7 @@ DWORD FASTCALL handleClientUpdate(DataPacket* packet)
 	{
 	case UC_SELECT_STASH: setSelectedStashClient(packet->mParam1, packet->mParam2, packet->mParam3, (packet->mParam2 & 8) == 8); return 1;
 	case UC_SHARED_GOLD : updateSharedGold(packet->mParam1); return 1;
-	case UC_SORT_ITEM : sortStashClientItem(packet->mParam1, packet->mParam2, packet->mParam3); return 1;
-	case UC_SORT_DONE : sortStashClientDone(packet->mParam1, packet->mParam2, packet->mParam3); return 1;
+	case UC_SORT_STASH : sortStashClient(packet->mParam1, packet->mParam2, packet->mParam3); return 1;
 	case UC_PAGE_NAME:
 		{
 			char pageName[21];

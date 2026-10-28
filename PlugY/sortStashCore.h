@@ -419,10 +419,11 @@ static int sortCompareForQsort(const void* a, const void* b)
 
 /*
 Sort the items and place them. places[i] is the place of items[i].
-If the pages needed are more than maxPages (0 : no limit), the items are packed again without the
-group and row breaks (like planSharedStashSort). Return the number of pages used, or -1 if it doesn't fit.
+force < 0 : if the pages needed are more than maxPages (0 : no limit), the items are packed again without the
+group and row breaks (like planSharedStashSort). force = 0 / 1 : normal / compact packing, without maxPages.
+Return the number of pages used, or -1 if it doesn't fit.
 */
-static int sortStashPlan(SortItem* items, int nb, int gridW, int gridH, unsigned int maxPages, SortPlace* places, bool* compact)
+static int sortStashPlan(SortItem* items, int nb, int gridW, int gridH, unsigned int maxPages, int force, SortPlace* places, bool* compact)
 {
 	*compact = false;
 	if (nb <= 0) return 0;
@@ -436,12 +437,14 @@ static int sortStashPlan(SortItem* items, int nb, int gridW, int gridH, unsigned
 	}
 	qsort(sorted, nb, sizeof(SortItem*), sortCompareForQsort);
 
-	int used = sortPack(sorted, nb, gridW, gridH, true, true, sortedPlaces);
-	if (used < 0 || (maxPages && (unsigned int)used > maxPages))
+	int used = -1;
+	if (force <= 0)
+		used = sortPack(sorted, nb, gridW, gridH, true, true, sortedPlaces);
+	if (force > 0 || (force < 0 && (used < 0 || (maxPages && (unsigned int)used > maxPages))))
 	{
 		*compact = true;
 		used = sortPack(sorted, nb, gridW, gridH, false, false, sortedPlaces);
-		if (maxPages && (unsigned int)used > maxPages) used = -1;
+		if (force < 0 && maxPages && (unsigned int)used > maxPages) used = -1;
 	}
 	if (used >= 0)
 		for (int i = 0; i < nb; i++)
@@ -449,6 +452,23 @@ static int sortStashPlan(SortItem* items, int nb, int gridW, int gridH, unsigned
 	free(sorted);
 	free(sortedPlaces);
 	return used;
+}
+
+// Checksum of a sort result, the same whatever the order of the items.
+static unsigned int sortStashChecksum(const SortItem* items, const SortPlace* places, int nb, int nbPages)
+{
+	unsigned int sum = (unsigned int)nbPages * 0x27D4EB2Du;
+	for (int i = 0; i < nb; i++)
+	{
+		unsigned int h = items[i].unitId * 0x9E3779B1u;
+		h ^= (unsigned int)places[i].page * 0x85EBCA77u;
+		h ^= (unsigned int)((places[i].x << 8) | places[i].y) * 0xC2B2AE3Du;
+		h ^= h >> 15;
+		h *= 0x2C1B3C6Du;
+		h ^= h >> 12;
+		sum += h;
+	}
+	return sum;
 }
 
 /*================================= END OF FILE =================================*/
