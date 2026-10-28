@@ -11,6 +11,7 @@
 #include "updateServer.h"
 #include "infinityStash.h"
 #include "plugYFiles.h"		// Install_PlugYImagesFiles()
+#include "bigStash.h"		// isLodStashLayout()
 #include "common.h"
 #include <stdio.h>
 
@@ -89,15 +90,16 @@ DWORD	getYPreviousIndexBtn()	{return RY(posYPreviousIndexBtn<0 ? 0x40 : posYPrev
 DWORD	getXNextIndexBtn()		{return RX(posXNextIndexBtn<0? D2GetResolution()?0xC0:0xEF : posXNextIndexBtn);}//217:SEL_X(0x128, 0xC0, 0xEF, 0xC0));}
 DWORD	getYNextIndexBtn()		{return RY(posYNextIndexBtn<0 ? 0x40 : posYNextIndexBtn);}
 DWORD	getXPutGoldBtn()		{return RX(posXPutGoldBtn<0? 0x1C : posXPutGoldBtn);}
-DWORD	getYPutGoldBtn()		{return RY(posYPutGoldBtn<0 ? 0x1A8 : posYPutGoldBtn);}
+DWORD	getYPutGoldBtn()		{return RY(posYPutGoldBtn<0 ? isLodStashLayout()?0x1A8:0xE4 : posYPutGoldBtn);}
 DWORD	getXTakeGoldBtn()		{return RX(posXTakeGoldBtn<0? 0x105 : posXTakeGoldBtn);}
-DWORD	getYTakeGoldBtn()		{return RY(posYTakeGoldBtn<0 ? 0x1A8 : posYTakeGoldBtn);}
+DWORD	getYTakeGoldBtn()		{return RY(posYTakeGoldBtn<0 ? isLodStashLayout()?0x1A8:0xE4 : posYTakeGoldBtn);}
 DWORD	getXStashNameField()	{return RX(posXStashNameField<0 ? 0x4A : posXStashNameField);}
-DWORD	getYStashNameField()	{return RY(posYStashNameField<0 ? 0x19A : posYStashNameField);}
+DWORD	getYStashNameField()	{return RY(posYStashNameField<0 ? isLodStashLayout()?0x19A:0xD6 : posYStashNameField);}
 DWORD	getXStashGoldField()	{return RX(posXStashGoldField<0 ? 0x61 : posXStashGoldField);}
-DWORD	getYStashGoldField()	{return RY(posYStashGoldField<0 ? 0x1B6 : posYStashGoldField);}
+DWORD	getYStashGoldField()	{return RY(posYStashGoldField<0 ? isLodStashLayout()?0x1B6:0xF2 : posYStashGoldField);}
 
 //closeBtn x: D2C=0x113 LOD=0x110(0->0x28)		y: D2C=0x41 LOD=0x40 (-0x23 -> 5)
+//Diablo II Classic stash (without big stash) : gold field and max gold text are lower (gold field y: D2C=0xF2 LOD=0x1B6, text y: D2C=0xDB LOD=0x19F)
 
 
 #define isOnButtonNextStash(x,y) isOnRect(x, y, getXNextBtn(), getYNextBtn(), posWNextBtn, posHNextBtn)
@@ -141,7 +143,7 @@ void UpdateStashPosition()
 
 void* STDCALL printBtns()
 {
-	if (onRealm || !D2isLODGame()) return D2LoadBuySelBtn();
+	if (onRealm) return D2LoadBuySelBtn();
 
 	Unit* ptChar = D2GetClientPlayer();
 
@@ -224,7 +226,7 @@ void* STDCALL printBtns()
 
 DWORD STDCALL manageBtnDown(sWinMessage* msg)
 {
-	if (onRealm || !D2isLODGame()) return 0;
+	if (onRealm) return 0;
 
 	if (isOnButtonPreviousStash(msg->x,msg->y))
 		isDownBtn.previous = 1;
@@ -252,7 +254,7 @@ DWORD STDCALL manageBtnDown(sWinMessage* msg)
 
 DWORD STDCALL manageBtnUp(sWinMessage* msg)
 {
-	if (onRealm || !D2isLODGame()) return 0;
+	if (onRealm) return 0;
 
 	Unit* ptChar = D2GetClientPlayer();
 
@@ -333,7 +335,7 @@ DWORD STDCALL manageBtnUp(sWinMessage* msg)
 
 void FASTCALL printPageNumber(LPWSTR maxGoldText, DWORD x, DWORD y, DWORD color, DWORD bfalse)
 {
-	if (onRealm || !D2isLODGame() )
+	if (onRealm)
 	{
 		D2PrintString(maxGoldText,x,y,color,bfalse);
 		return;

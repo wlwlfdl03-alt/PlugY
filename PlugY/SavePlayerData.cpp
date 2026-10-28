@@ -37,7 +37,7 @@ Save MP :
 		0052C93B  |. E8 C05A0000    CALL Game.00532400                       ; \Game.00532400
 			005324FD  |. E8 3EFEFFFF    CALL Game.00532340                       ; \Game.00532340
 */
-void backupSaveFiles(char* name, int isHardCoreGame)
+void backupSaveFiles(char* name, int isHardCoreGame, bool isLOD)
 {
 	if (!active_AutoBackup)
 		return;
@@ -56,7 +56,7 @@ void backupSaveFiles(char* name, int isHardCoreGame)
 	CreateDirectory(backupPath, NULL);
 	sprintf(backupPath, "%sbackup\\%s_%04d%02d%02d_%02d%02d%02d\\", savePath, name, tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec);
 	CreateDirectory(backupPath, NULL);
-	log_msg("backup directory:%s isHardcore:%d\n", backupPath, isHardCoreGame);
+	log_msg("backup directory:%s isHardcore:%d isLOD:%d\n", backupPath, isHardCoreGame, isLOD);
 
 	sprintf(szSaveName,   "%s%s.d2s", savePath,   name);
 	sprintf(szBackupName, "%s%s.d2s", backupPath, name);
@@ -86,18 +86,9 @@ void backupSaveFiles(char* name, int isHardCoreGame)
 	sprintf(szBackupName, "%s%s.map", backupPath, name);
 	CopyFile(szSaveName, szBackupName, true);
 
-	if (separateHardSoftStash && isHardCoreGame != 0)
-	{
-		sprintf(szSaveName,   "%s%s%s.sss", savePath,   "_LOD_HC_", sharedStashFilename);
-		sprintf(szBackupName, "%s%s%s.sss", backupPath, "_LOD_HC_", sharedStashFilename);
-		CopyFile(szSaveName, szBackupName, true);
-	}
-	if (!separateHardSoftStash || isHardCoreGame != 1)
-	{
-		sprintf(szSaveName,   "%s%s%s.sss", savePath,   separateHardSoftStash && isHardCoreGame != 0? "_LOD_HC_" : "_LOD_", sharedStashFilename);
-		sprintf(szBackupName, "%s%s%s.sss", backupPath, separateHardSoftStash && isHardCoreGame != 0? "_LOD_HC_" : "_LOD_", sharedStashFilename);
-		CopyFile(szSaveName, szBackupName, true);
-	}
+	sprintf(szSaveName,   "%s%s%s.sss", savePath,   getSharedSaveFilePrefix(isHardCoreGame != 0, isLOD), sharedStashFilename);
+	sprintf(szBackupName, "%s%s%s.sss", backupPath, getSharedSaveFilePrefix(isHardCoreGame != 0, isLOD), sharedStashFilename);
+	CopyFile(szSaveName, szBackupName, true);
 
 	// delete older backup
 	if (maxBackupPerCharacter > 0)
@@ -143,6 +134,10 @@ void backupSaveFiles(char* name, int isHardCoreGame)
 						DeleteFile(szBackupName);
 						sprintf(szBackupName, "%s_LOD_HC_%s.sss", backupPath, sharedStashFilename);
 						DeleteFile(szBackupName);
+						sprintf(szBackupName, "%s_CLASSIC_%s.sss", backupPath, sharedStashFilename);
+						DeleteFile(szBackupName);
+						sprintf(szBackupName, "%s_CLASSIC_HC_%s.sss", backupPath, sharedStashFilename);
+						DeleteFile(szBackupName);
 						RemoveDirectory(backupPath);
 						nbFolders--;
 					}
@@ -156,12 +151,10 @@ void backupSaveFiles(char* name, int isHardCoreGame)
 
 void STDCALL SaveSPPlayerCustomData(Unit* ptChar)
 {
-	if (!D2isLODGame()) return;//D2Game but in SP so np
-
 	log_msg("\n--- Start SaveSPPlayerCustomData ---\n");
 
 	NetClient* ptClient = D2GetClient(ptChar,__FILE__,__LINE__);
-	backupSaveFiles(PCPlayerData->name, ptClient->isHardCoreGame);
+	backupSaveFiles(PCPlayerData->name, ptClient->isHardCoreGame, PCGame->isLODGame != 0);
 
 	if (active_PlayerCustomData)
 	{
@@ -184,7 +177,7 @@ void STDCALL SaveSPPlayerCustomData(Unit* ptChar)
 			d2_assert(!dataShr, "Error : Memory allocation Shared SaveFile", __FILE__, __LINE__);
 			saveSharedSaveFile(ptChar, &dataShr, &maxSizeShr, &curSizeShr);
 
-			writeSharedSaveFile(PCPlayerData->name, dataShr, curSizeShr, ptClient->isHardCoreGame );
+			writeSharedSaveFile(PCPlayerData->name, dataShr, curSizeShr, ptClient->isHardCoreGame != 0, PCGame->isLODGame != 0);
 			D2FreeMem(PCGame->memoryPool, dataShr,__FILE__,__LINE__,0);
 		}
 	}
@@ -505,7 +498,9 @@ void STDCALL SaveMPPlayerCustomData(BYTE* dataD2Savefile )
 	log_msg("SaveMPPlayerCustomData - Start.\n");
 
 	Unit* ptChar = D2GetClientPlayer();
-	backupSaveFiles(PCPlayerData->name, (dataD2Savefile[0x24] & 4) == 4);
+	bool isHardcore = (dataD2Savefile[0x24] & 0x04) == 0x04;
+	bool isLOD = (dataD2Savefile[0x24] & 0x20) == 0x20;
+	backupSaveFiles(PCPlayerData->name, isHardcore, isLOD);
 
 	if (active_PlayerCustomData)
 	{
@@ -518,7 +513,7 @@ void STDCALL SaveMPPlayerCustomData(BYTE* dataD2Savefile )
 				D2FogMemDeAlloc(receivedSaveFiles.dataExtended,__FILE__,__LINE__,0);
 				if (active_sharedStash)
 				{
-					writeSharedSaveFile(PCPlayerData->name, receivedSaveFiles.dataShared, receivedSaveFiles.sizeShared, (dataD2Savefile[0x24] & 4) == 4);//6FBAB9A4-6FAA0000
+					writeSharedSaveFile(PCPlayerData->name, receivedSaveFiles.dataShared, receivedSaveFiles.sizeShared, isHardcore, isLOD);//6FBAB9A4-6FAA0000
 					D2FogMemDeAlloc(receivedSaveFiles.dataShared,__FILE__,__LINE__,0);
 				}
 				ZeroMemory(&receivedSaveFiles,sizeof(receivedSaveFiles));

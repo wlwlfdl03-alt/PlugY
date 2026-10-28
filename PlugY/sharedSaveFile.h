@@ -8,8 +8,10 @@
 
 #include "common.h"
 
-BYTE* readSharedSaveFile(char* name, DWORD* size);
-void writeSharedSaveFile(char* name, BYTE* data, DWORD size, bool isHardcore);
+bool isExpansionCharacter(char* name);
+const char* getSharedSaveFilePrefix(bool isHardcore, bool isLOD);
+BYTE* readSharedSaveFile(char* name, DWORD* size, bool isLOD);
+void writeSharedSaveFile(char* name, BYTE* data, DWORD size, bool isHardcore, bool isLOD);
 
 int loadSharedSaveFile(Unit* ptChar, BYTE* data, DWORD maxSize);
 void saveSharedSaveFile(Unit* ptChar, BYTE** data, DWORD* maxSize, DWORD* curSize);

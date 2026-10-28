@@ -12,6 +12,7 @@
 
 bool active_bigStash = false;
 bool active_bigStash_tested = false;
+bool active_classicBigStash = false;
 
 const char* tradeStash_RefFile= "%s\\TradeStash";
 const BYTE gridX_BB = 10;
@@ -21,26 +22,34 @@ const DWORD gridRight_BB = 302;
 const DWORD gridTop_BB = 82;
 const DWORD gridbottom_BB = 371;
 
+// Rows of inventory.txt : "Bank Page 1" is the stash of Classic games, "Big Bank Page 1" the stash of LoD games.
+// The rows at +16 are the same pages in 800x600.
+#define INV_BANK_PAGE		8
+#define INV_BIG_BANK_PAGE	12
+#define INV_HIGH_RES_SHIFT	16
+
+void setBigStashGrid(InventoryBIN* inventory, DWORD shiftX, DWORD shiftY)
+{
+	inventory->gridX = gridX_BB;
+	inventory->gridY = gridY_BB;
+	inventory->gridLeft = gridLeft_BB + shiftX;
+	inventory->gridRight = gridRight_BB + shiftX;
+	inventory->gridTop = gridTop_BB + shiftY;
+	inventory->gridBottom = gridbottom_BB + shiftY;
+}
+
 InventoryBIN* STDCALL modifStashGrid(InventoryBIN* ptInventoryBin)
 {
 	active_bigStash_tested = true;
 	if ( onRealm || !active_bigStash) return ptInventoryBin;
 
-	InventoryBIN* inventory=ptInventoryBin+12;
-	inventory->gridX = gridX_BB;
-	inventory->gridY = gridY_BB;
-	inventory->gridLeft = gridLeft_BB;
-	inventory->gridRight = gridRight_BB;
-	inventory->gridTop = gridTop_BB;
-	inventory->gridBottom = gridbottom_BB;
-
-	inventory = ptInventoryBin+28;
-	inventory->gridX = gridX_BB;
-	inventory->gridY = gridY_BB;
-	inventory->gridLeft = gridLeft_BB + 80;
-	inventory->gridRight = gridRight_BB + 80;
-	inventory->gridTop = gridTop_BB + 60;
-	inventory->gridBottom = gridbottom_BB + 60;
+	setBigStashGrid(ptInventoryBin + INV_BIG_BANK_PAGE, 0, 0);
+	setBigStashGrid(ptInventoryBin + INV_BIG_BANK_PAGE + INV_HIGH_RES_SHIFT, 80, 60);
+	if (active_classicBigStash)
+	{
+		setBigStashGrid(ptInventoryBin + INV_BANK_PAGE, 0, 0);
+		setBigStashGrid(ptInventoryBin + INV_BANK_PAGE + INV_HIGH_RES_SHIFT, 80, 60);
+	}
 
 	return ptInventoryBin;
 }
@@ -78,6 +87,56 @@ normalTradeStash:
 	JMP EAX
 }}
 
+/*
+Diablo II Classic stash has its own layout : "bank" background, gold field above a 6x4 grid at the bottom.
+With the big stash, Classic games use the LoD layout with the PlugY background :
+the D2Client instructions choosing the stash layout read stashLodLayout instead of IsLodGame.
+*/
+DWORD stashLodLayout = 0;
+DWORD* ptStashBankImage = NULL;
+DWORD D2isExpansionInstalled = 0;// Fog.#10227
+
+bool isLodStashLayout()
+{
+	return D2isLODGame() || (active_classicBigStash && !onRealm);
+}
+
+void STDCALL updateStashLayout()
+{
+	stashLodLayout = isLodStashLayout();
+}
+
+FCT_ASM ( caller_updateStashLayout )
+	PUSH ECX
+	PUSH EDX
+	CALL updateStashLayout
+	POP EDX
+	POP ECX
+	MOV EAX,ptStashBankImage
+	MOV EAX,DWORD PTR DS:[EAX]
+	RETN
+}}
+
+FCT_ASM ( caller_isOnStashGoldField )
+	PUSH EAX
+	PUSH EDX
+	CALL updateStashLayout
+	POP EDX
+	POP EAX
+	MOV ECX,stashLodLayout
+	RETN
+}}
+
+// Load the PlugY background even if LoD isn't installed.
+FCT_ASM ( caller_loadTradeStash )
+	CMP onRealm,0
+	JNZ normalLoadTradeStash
+	MOV EAX,1
+	RETN
+normalLoadTradeStash:
+	JMP D2isExpansionInstalled
+}}
+
 
 void Install_BigStash()
 {
@@ -110,6 +169,47 @@ void Install_BigStash()
 	//6FB3CC1C  |. 68 04010000    PUSH 104
 	//6FB443FC  |. 68 04010000    PUSH 104
 	//00489EB5  |. 68 04010000    PUSH 104                                 ; |Arg2 = 00000104
+
+	if (version_D2Client == V113c)
+	{
+		log_msg("Patch D2Client for use the LoD stash layout in Diablo II Classic games. (BigStash)\n");
+		active_classicBigStash = true;
+		ptStashBankImage = (DWORD*)(offset_D2Client + 0x11BC74);
+		D2isExpansionInstalled = offset_D2Client + 0xBF8C;
+
+		// Load stash background even in Classic install
+		mem_seek R8(D2Client, 0000, 0000, 0000, 0000, 0000, 0000, 8CC05, 0000, 0000);
+		MEMC_REF4( D2isExpansionInstalled, caller_loadTradeStash);
+		//6FB3CC05  |. E8 82F3F7FF    CALL <JMP.&Fog.#10227>
+
+		// Update stash layout before printing stash
+		mem_seek R8(D2Client, 0000, 0000, 0000, 0000, 0000, 0000, 998D5, 0000, 0000);
+		memt_byte( 0xA1, 0xE8 );
+		MEMT_REF4( ptStashBankImage, caller_updateStashLayout);
+		//6FB498D5  |. A1 74BCBC6F    MOV EAX,DWORD PTR DS:[6FBCBC74]
+
+		// Stash background
+		mem_seek R8(D2Client, 0000, 0000, 0000, 0000, 0000, 0000, 998E4, 0000, 0000);
+		MEMT_DWORD( ptIsLodGame, &stashLodLayout);
+		//6FB498E2  |. 392D 5498BC6F  CMP DWORD PTR DS:[6FBC9854],EBP
+
+		// Position of max gold text
+		mem_seek R8(D2Client, 0000, 0000, 0000, 0000, 0000, 0000, 999FB, 0000, 0000);
+		MEMT_DWORD( ptIsLodGame, &stashLodLayout);
+		//6FB499FA  |. A1 5498BC6F    MOV EAX,DWORD PTR DS:[6FBC9854]
+
+		// Position of gold field
+		mem_seek R8(D2Client, 0000, 0000, 0000, 0000, 0000, 0000, 8D14C, 0000, 0000);
+		MEMT_DWORD( ptIsLodGame, &stashLodLayout);
+		//6FB3D14A  |. 8B3D 5498BC6F  MOV EDI,DWORD PTR DS:[6FBC9854]
+
+		// Mouse over gold field
+		mem_seek R8(D2Client, 0000, 0000, 0000, 0000, 0000, 0000, 8B6B0, 0000, 0000);
+		memt_byte( 0x8B, 0xE8 );
+		MEMT_REF4( 0x0D | ((DWORD)ptIsLodGame << 8), caller_isOnStashGoldField);
+		memt_byte( (BYTE)((DWORD)ptIsLodGame >> 24), 0x90 );
+		//6FB3B6B0  |$ 8B0D 5498BC6F  MOV ECX,DWORD PTR DS:[6FBC9854]
+	}
 
 	log_msg("\n");
 

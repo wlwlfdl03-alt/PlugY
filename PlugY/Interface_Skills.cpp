@@ -26,7 +26,7 @@ DWORD	getYSkillBtn()			{return RY(posYUnassignSkillBtn<0 ? 0x1B1 : posYUnassignS
 
 void STDCALL printSkillsPageBtns()
 {
-	if (active_SkillsPoints && !onRealm && D2isLODGame())
+	if (active_SkillsPoints && !onRealm)
 	{
 		sDrawImageInfo data;
 		ZeroMemory(&data,sizeof(data));
@@ -46,7 +46,7 @@ Unit* STDCALL skillsPageMouseDown(sWinMessage* msg)
 {
 	Unit* ptChar = D2GetClientPlayer();
 
-	if (active_SkillsPoints && !onRealm && D2isLODGame() && isOnButtonUnassignSkill(D2GetMouseX(),D2GetMouseY()))
+	if (active_SkillsPoints && !onRealm && isOnButtonUnassignSkill(D2GetMouseX(),D2GetMouseY()))
 	{
 		log_msg("push down left button unassign skill\n");
 		btnSkillIsDown = 1;
@@ -60,7 +60,7 @@ Unit* STDCALL skillsPageMouseDown(sWinMessage* msg)
 
 void STDCALL skillsPageMouseUp()
 {
-	if (active_SkillsPoints && !onRealm && D2isLODGame() && isOnButtonUnassignSkill(D2GetMouseX(),D2GetMouseY()))
+	if (active_SkillsPoints && !onRealm && isOnButtonUnassignSkill(D2GetMouseX(),D2GetMouseY()))
 	{
 		log_msg("push up left button unassign skill\n");
 		if (btnSkillIsDown)

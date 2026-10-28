@@ -40,7 +40,7 @@ static struct
 
 void STDCALL printStatsPageBtns()
 {
-	if (!active_newInterfaces || !D2isLODGame() ) return;
+	if (!active_newInterfaces) return;
 
 	LPWSTR lpText;
 	DWORD mx = D2GetMouseX();
@@ -82,7 +82,7 @@ Unit* STDCALL statsPageMouseDown(sWinMessage* msg)
 {
 	Unit* ptChar = D2GetClientPlayer();
 
-	if (!active_newInterfaces || !D2isLODGame() ) return ptChar;
+	if (!active_newInterfaces) return ptChar;
 
 	if (D2GetResolution() && isOnPreviousPageBtn(msg->x,msg->y))
 	{
@@ -108,7 +108,7 @@ Unit* STDCALL statsPageMouseUp(sWinMessage* msg)
 {
 	Unit* ptChar = D2GetClientPlayer();
 
-	if (!active_newInterfaces || !D2isLODGame() ) return ptChar;
+	if (!active_newInterfaces) return ptChar;
 
 	if (D2GetResolution() && isOnPreviousPageBtn(msg->x,msg->y))
 	{
