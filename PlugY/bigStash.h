@@ -10,6 +10,9 @@
 
 extern bool active_bigStash;
 extern bool active_bigStash_tested;
+extern bool active_classicBigStash;
+
+bool isLodStashLayout();
 
 void Install_BigStash();
 

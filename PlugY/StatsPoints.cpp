@@ -139,7 +139,7 @@ void UnassignEnePoints(Unit* ptChar)
 
 void STDCALL printDisabledStatsBtn(WORD statID, sDrawImageInfo* data, DWORD x, DWORD y, DWORD p4, DWORD p5, DWORD p6)
 {
-	if ( onRealm || !D2isLODGame())
+	if (onRealm)
 	{
 		D2PrintImage(data,x,y,p4,p5,p6);
 		return;
@@ -201,7 +201,7 @@ BYTE currentMsgID=0;
 
 WORD UnassignStats()
 {
-	if (onRealm || !D2isLODGame()) return 0;
+	if (onRealm) return 0;
 	return GetKeyState(keyUsedForUnassignStatPoint);
 }
 
@@ -279,7 +279,7 @@ DWORD STDCALL pushDown (DWORD num)
 {
 	Unit* ptChar = D2GetClientPlayer();
 
-	if ( !D2isLODGame() || GetKeyState(keyUsedForUnassignStatPoint) >= 0)//GetAsyncKeyState
+	if ( GetKeyState(keyUsedForUnassignStatPoint) >= 0)//GetAsyncKeyState
 	{
 		if ( D2GetPlayerBaseStat(ptChar, 4, 0) > 0)
 			return 1;

@@ -34,20 +34,15 @@ DWORD STDCALL LoadSPCustomData(Unit* ptChar)
 		{log_msg("LoadSPCustomData : PCGame == NULL\n");return 0x1B;}//Unknow failure
 
 	DWORD ret=0;
-	if (PCGame->isLODGame)
+	log_msg(PCGame->isLODGame ? "is LOD Game\n" : "is Classic Game\n");
+	data = readExtendedSaveFile(PCPlayerData->name, &size);
+	ret = loadExtendedSaveFile(ptChar, data, size);
+	D2FogMemDeAlloc(data,__FILE__,__LINE__,0);
+	if (!ret && active_sharedStash)
 	{
-		log_msg("is LOD Game\n");
-		data = readExtendedSaveFile(PCPlayerData->name, &size);
-		ret = loadExtendedSaveFile(ptChar, data, size);
+		data = readSharedSaveFile(PCPlayerData->name, &size, PCGame->isLODGame != 0);
+		ret = loadSharedSaveFile(ptChar, data, size);
 		D2FogMemDeAlloc(data,__FILE__,__LINE__,0);
-		if (!ret && active_sharedStash)
-		{
-			data = readSharedSaveFile(PCPlayerData->name, &size);
-			ret = loadSharedSaveFile(ptChar, data, size);
-			D2FogMemDeAlloc(data,__FILE__,__LINE__,0);
-		}
-	} else {
-		log_msg("is not LOD Game\n");
 	}
 
 	log_msg("End LoadSPCustomData.\n\n");
@@ -210,7 +205,7 @@ void FASTCALL SendSaveFiles (char* ptPath, DWORD maxsize, char* name)
 	{
 		log_msg("Send Shared Save File\n");
 		DWORD sizeShared = 0;
-		BYTE* dataShared = readSharedSaveFile(name, &sizeShared);
+		BYTE* dataShared = readSharedSaveFile(name, &sizeShared, isExpansionCharacter(name));
 		sendData(dataShared, sizeShared, true);
 		D2FogMemDeAlloc(dataShared,__FILE__,__LINE__,0);
 	}
@@ -353,15 +348,12 @@ DWORD STDCALL LoadMPCustomData(Unit* ptChar)
 		ret = 0x1B;//Unknow failure
 	}
 
-	if (PCGame->isLODGame)
+	if (!ret)
 	{
-		log_msg("is LOD Game\n");
-		if (!ret)
-			ret = loadExtendedSaveFile(ptChar, curSF->dataExtended, curSF->sizeExtended);
+		log_msg(PCGame->isLODGame ? "is LOD Game\n" : "is Classic Game\n");
+		ret = loadExtendedSaveFile(ptChar, curSF->dataExtended, curSF->sizeExtended);
 		if (!ret && active_sharedStash)
 			ret = loadSharedSaveFile(ptChar, curSF->dataShared, curSF->sizeShared);
-	} else {
-		log_msg("is not LOD Game\n");
 	}
 
 	freeCurrentCF(PCGame->memoryPool, &curSF);

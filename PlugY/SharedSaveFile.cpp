@@ -16,7 +16,42 @@
 #define FILE_VERSION 0x3230			//"02"
 
 
-BYTE* readSharedSaveFile(char* name, DWORD* size)
+#define D2S_STATUS_HARDCORE 0x04
+#define D2S_STATUS_EXPANSION 0x20
+
+// Return the status byte of the character's .d2s file, or -1 if it can't be read.
+int readCharacterStatus(char* name)
+{
+	char filename[512];
+	D2FogGetSavePath( filename, 512-strlen(name)-5);
+	strcat(filename,name);
+	strcat(filename,".d2s");
+	FILE* file = fopen(filename, "rb");
+	if (!file)
+		return -1;
+	BYTE status;
+	fseek(file, 0x24, SEEK_SET);
+	DWORD nbRead = fread(&status, 1, 1, file);
+	fclose(file);
+	return nbRead == 1 ? status : -1;
+}
+
+bool isExpansionCharacter(char* name)
+{
+	int status = readCharacterStatus(name);
+	log_msg("%s is an expansion character = %d (status=%d)\n", name, status < 0 || (status & D2S_STATUS_EXPANSION), status);
+	return status < 0 || (status & D2S_STATUS_EXPANSION);// Unknown : keep LoD behavior.
+}
+
+// Diablo II Classic characters use their own shared stash : LoD items can't exist in a Classic game.
+const char* getSharedSaveFilePrefix(bool isHardcore, bool isLOD)
+{
+	if (isLOD)
+		return separateHardSoftStash && isHardcore ? "_LOD_HC_" : "_LOD_";
+	return separateHardSoftStash && isHardcore ? "_CLASSIC_HC_" : "_CLASSIC_";
+}
+
+BYTE* readSharedSaveFile(char* name, DWORD* size, bool isLOD)
 {
 	char filename[512];
 	BYTE* data=NULL;
@@ -25,26 +60,15 @@ BYTE* readSharedSaveFile(char* name, DWORD* size)
 
 	if (separateHardSoftStash)//Get hardcore flag
 	{
-		D2FogGetSavePath( filename, 512-strlen(name)-5);
-		strcat(filename,name);
-		strcat(filename,".d2s");
-		log_msg("Normal file to read if it's hardcore character : %s\n",filename);
-		file = fopen(filename, "rb");
-		if (file)
-		{
-			fseek(file, 0x24, SEEK_SET);
-			DWORD nbRead = fread(&isHardCore, 1, 1, file);
-			isHardCore = (nbRead==1)? ((isHardCore & 4) == 4) : 0;
-			fclose(file);
-			file=NULL;
-		}
+		int status = readCharacterStatus(name);
+		isHardCore = status >= 0 && (status & D2S_STATUS_HARDCORE);
 		log_msg("%s is a HardCore character = %d\n",name,isHardCore);
 	}
 
 	if (active_sharedStash)
 	{
-		D2FogGetSavePath( filename, 512-strlen("_LOD_HC_SharedStashSave")-5);
-		strcat(filename,isHardCore? "_LOD_HC_" : "_LOD_");
+		D2FogGetSavePath( filename, 512-strlen("_CLASSIC_HC_")-strlen(sharedStashFilename)-5);
+		strcat(filename, getSharedSaveFilePrefix(isHardCore != 0, isLOD));
 		strcat(filename, sharedStashFilename);
 		strcat(filename,".sss");
 
@@ -125,14 +149,14 @@ int loadSharedSaveFile(Unit* ptChar, BYTE data[], DWORD maxSize)
 }
 
 
-void writeSharedSaveFile(char* name, BYTE* data, DWORD size, bool isHardcore)
+void writeSharedSaveFile(char* name, BYTE* data, DWORD size, bool isHardcore, bool isLOD)
 {
 	char szTempName[MAX_PATH];
 	char szSaveName[MAX_PATH];
 
 	//Get temporary savefile name.
 	D2FogGetSavePath( szTempName, MAX_PATH-30);
-	strcat(szTempName, separateHardSoftStash && isHardcore? "_LOD_HC_" : "_LOD_");
+	strcat(szTempName, getSharedSaveFilePrefix(isHardcore, isLOD));
 	strcat(szTempName, sharedStashFilename);
 	strcat(szTempName,".ss~");
 	log_msg("Shared temporary file for saving : %s\n", szTempName);
@@ -144,7 +168,7 @@ void writeSharedSaveFile(char* name, BYTE* data, DWORD size, bool isHardcore)
 
 	//Get real savefile name.
 	D2FogGetSavePath( szSaveName, MAX_PATH-30);
-	strcat(szSaveName, separateHardSoftStash && isHardcore? "_LOD_HC_" : "_LOD_");
+	strcat(szSaveName, getSharedSaveFilePrefix(isHardcore, isLOD));
 	strcat(szSaveName, sharedStashFilename);
 	strcat(szSaveName,".sss");
 	log_msg("Shared file for saving : %s\n", szSaveName);

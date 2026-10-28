@@ -333,7 +333,6 @@ void manageStatLine(Unit* ptChar, statsInterfaceBIN* statLine, int currentPage, 
 
 void STDCALL printNewStatsPageTwo(int currentPage)
 {
-	if (!D2isLODGame()) return D2PrintStatsPage();
 
 	WCHAR text[BUFSIZE];
 	LPWSTR lpText;
@@ -437,7 +436,6 @@ void STDCALL printNewStatsPageTwo(int currentPage)
 
 DWORD STDCALL mouseNewStatsPageTwoLeftDown(sWinMessage* msg)
 {
-	if (!D2isLODGame()) return -1;
 
 	DWORD x = D2GetMouseX();
 	DWORD y = D2GetMouseY();
@@ -469,7 +467,6 @@ DWORD STDCALL mouseNewStatsPageTwoLeftDown(sWinMessage* msg)
 
 DWORD STDCALL mouseNewStatsPageTwoLeftUp(sWinMessage* msg)
 {
-	if (!D2isLODGame()) return -1;
 
 	DWORD x = D2GetMouseX();
 	DWORD y = D2GetMouseY();

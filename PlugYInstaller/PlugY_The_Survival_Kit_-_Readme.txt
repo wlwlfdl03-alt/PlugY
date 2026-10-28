@@ -510,6 +510,7 @@ This can appear when you have bad item in the shared stash file.
 A possible cause is to use same save folder for different mod.
 In this case, just change the save folder in PlugY.ini.
 You can also move the _LOD_SharedStashSave.sss and _LOD_HC_SharedStashSave.sss to another directory.
+(Diablo II Classic characters use _CLASSIC_SharedStashSave.sss and _CLASSIC_HC_SharedStashSave.sss)
 
 => I get "sUnitItemInsertItemInvGridBase failed at 1046 in C:\projects\D2\head\Diablo2\Source\D2Client\UNIT\Item.cpp" in D2YYMMDD.txt, what I should do ?
 It's just a warning, it causes no problem in game.
@@ -700,6 +701,7 @@ Following are default values, between {} are some examples values with descripti
 [STASH]
 Increase the stash to 10x10 squares.
 Use PlugY\TradeStash.dc6 to change the background image.
+In Diablo II Classic games, the big stash uses the same stash screen as LoD (only with LoD 1.13c, other versions keep the Classic stash).
 When bigStash is enabled, you must restart D2 for play in single/multi/open when you have started a game in closed Bnet previously (and vice versa).
 Following are default values, between {} are some examples values with descriptions :
 - ActiveBigStash=0	{0:Default stash size is used; 1: Enabled, Stash uses 10x10 squared}
@@ -711,7 +713,8 @@ There are 2 multipage stashes :
 Use the Toggle Button to switch between stash.
 Use arrow buttons on bottom the stash (and shift key) for switching between the pages.
 Definition : The last page is the last page with an item in it.
-The multipage stashes are inactive for Diablo II Classic Character and on realm.
+The multipage stashes are inactive on realm.
+Diablo II Classic characters have their own shared stash (LoD items can't be used in a Classic game).
 You can change the name of the shared filename.
 Following are default values, between {} are some examples values with descriptions :
 - ActiveMultiPageStash=0		{0:Disabled; 1:Enabled}
@@ -730,7 +733,7 @@ Following are default values, between {} are some examples values with descripti
 - ActiveSharedStashInMultiPlayer=0	{0:Disabled; 1:Enabled shared stash in multiplayer. Use only with different save folders.}
 - SeparateHardcoreStash=1		{0:Same shared stash for HC and SC; 1:Use 2 differents stashes}
 - OpenSharedStashOnLoading=0	{0:Disabled; 1:Select shared stash (instead of personal one) on character loading}
-- SharedStashFilename=SharedStashSave	{xxx: The filename will be "_LOD_xxx.sss"}
+- SharedStashFilename=SharedStashSave	{xxx: The filename will be "_LOD_xxx.sss" ("_CLASSIC_xxx.sss" for Diablo II Classic characters)}
 - displaySharedSetItemNameInGreen=1 	{0:Disabled; 1:Enabled, set items in stash are their name displayed in green on other sets items.}
 - MaxSharedPages=0 		{0:Infinite number of shared pages; 5000: Maximum of 5000 shared pages}
 - ActiveSharedGold=1		{0:Disabled; 1:Use command to put and take gold (see command section)}

@@ -60,7 +60,7 @@ Stash* getStashFromItem(Unit* ptChar, Unit* ptItem)
 Unit* FASTCALL updateItem(Game* ptGame, DWORD type, DWORD itemNum, Unit* ptChar)
 {
 	Unit* ptItem = D2GameGetObject(ptGame, type, itemNum);
-	if (ptGame->isLODGame && (D2ItemGetPage(ptItem) == 4))
+	if (D2ItemGetPage(ptItem) == 4)
 	{
 		Stash* ptStash = getStashFromItem(ptChar, ptItem);
 		//log_msg("- updateItem PCPY->currentStash->id : %d // ptStash->id : %d\n", PCPY->currentStash?PCPY->currentStash->id:-1, ptStash?ptStash->id:-1);
@@ -72,7 +72,7 @@ Unit* FASTCALL updateItem(Game* ptGame, DWORD type, DWORD itemNum, Unit* ptChar)
 
 void FASTCALL updateItem_111(Unit* ptItem, Unit* ptChar)
 {
-	if (PCGame->isLODGame && (D2ItemGetPage(ptItem) == 4))
+	if (D2ItemGetPage(ptItem) == 4)
 	{
 		Stash* ptStash = getStashFromItem(ptChar, ptItem);
 		if (ptStash)
@@ -83,11 +83,8 @@ void FASTCALL updateItem_111(Unit* ptItem, Unit* ptChar)
 void STDCALL updateClientPlayerOnLoading(Unit* ptChar)
 {
 	log_msg("--- Start updateClientPlayerOnLoading ---\n");
-	if (PCGame->isLODGame)
-	{
-		PCPY->showSharedStash = openSharedStashOnLoading && active_sharedStash;
-		selectStash(ptChar, PCPY->showSharedStash ? PCPY->sharedStash : PCPY->selfStash, true);
-	}
+	PCPY->showSharedStash = openSharedStashOnLoading && active_sharedStash;
+	selectStash(ptChar, PCPY->showSharedStash ? PCPY->sharedStash : PCPY->selfStash, true);
 	updateClient(ptChar, UC_SHARED_GOLD, PCPY->sharedGold, 0, 0);
 	log_msg("End update client on loading.\n\n");
 }

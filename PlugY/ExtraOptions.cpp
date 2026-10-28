@@ -595,7 +595,7 @@ void Install_EnabledTXTFilesWithMSExcel()
 
 void STDCALL printDisplayBaseStatsValue(WORD statID, sDrawImageInfo* data, DWORD x, DWORD y, DWORD p4, DWORD p5, DWORD p6)
 {
-	if ( onRealm || !D2isLODGame())
+	if (onRealm)
 	{
 		D2PrintImage(data,x,y,p4,p5,p6);
 		return;
