@@ -150,6 +150,10 @@ const char* S_posXStashGoldField = "PosXStashGoldField";
 const char* S_posYStashGoldField = "PosYStashGoldField";
 const char* S_posWStashGoldField = "PosWStashGoldField";
 const char* S_posHStashGoldField = "PosHStashGoldField";
+const char* S_posXSortBtn = "PosXSortBtn";
+const char* S_posYSortBtn = "PosYSortBtn";
+const char* S_posWSortBtn = "PosWSortBtn";
+const char* S_posHSortBtn = "PosHSortBtn";
 
 
 const char* S_STATS_POINTS = "STATS POINTS";
@@ -763,6 +767,18 @@ void init_Stash(INIFile* iniFile, INIFile* iniFixedFile, INIFile* iniDefaultFile
 		GET_PRIVATE_PROFILE_STRING(S_STASH, S_posHStashGoldField,"18");
 		posHStashGoldField = atoi(buffer);
 		log_msg("posHStashGoldField\t\t\t= %d\n", posHStashGoldField);
+		GET_PRIVATE_PROFILE_STRING(S_STASH, S_posXSortBtn,"-1");
+		posXSortBtn = atoi(buffer);
+		log_msg("posXSortBtn\t\t\t\t= %d\n", posXSortBtn);
+		GET_PRIVATE_PROFILE_STRING(S_STASH, S_posYSortBtn,"-1");
+		posYSortBtn = atoi(buffer);
+		log_msg("posYSortBtn\t\t\t\t= %d\n", posYSortBtn);
+		GET_PRIVATE_PROFILE_STRING(S_STASH, S_posWSortBtn,"32");
+		posWSortBtn = atoi(buffer);
+		log_msg("posWSortBtn\t\t\t\t= %d\n", posWSortBtn);
+		GET_PRIVATE_PROFILE_STRING(S_STASH, S_posHSortBtn,"32");
+		posHSortBtn = atoi(buffer);
+		log_msg("posHSortBtn\t\t\t\t= %d\n", posHSortBtn);
 	}
 
 	log_msg("\n");

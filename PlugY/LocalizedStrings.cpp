@@ -302,6 +302,7 @@ void loadLocalizedStrings(int language)
 	LOAD(STR_NEXT_PAGE);
 	LOAD(STR_ITEM_LEVEL);
 	LOAD(STR_PAGE_TYPE_CHANGE);
+	LOAD(STR_STASH_SORT);
 
 	// Cube receipt :
 	LOAD(STR_COW_PORTAL);

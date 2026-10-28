@@ -9,6 +9,7 @@
 =================================================================*/
 
 #include "plugYFiles.h"
+#include "sortStash.h"		// active_sortStash
 #include "common.h"
 #include <stdio.h>
 
@@ -21,6 +22,7 @@ void* stashBtnsImages = NULL;
 void* newStatsInterfaceImages = NULL;
 void* statsBackgroundImages = NULL;
 void* sharedGoldBtnsImages = NULL;
+void* sortBtnsImages = NULL;
 
 
 //void* lookupItemStatCost = NULL;
@@ -187,6 +189,7 @@ void STDCALL loadCustomImages()
 	if ( active_StatsPoints ) loadImagesFile(&unassignStatsBtnImages, "UnassignStatsBtns");
 	if ( active_multiPageStash || active_newInterfaces) loadImagesFile(&stashBtnsImages, "StashBtns");
 	if ( active_sharedGold) loadImagesFile(&sharedGoldBtnsImages, "SharedGoldBtns");
+	if ( active_sortStash ) loadImagesFile(&sortBtnsImages, "SortBtns");
 	if ( active_newInterfaces ) loadImagesFile(&newStatsInterfaceImages, "EmptyPage");
 	if ( active_newInterfaces ) loadImagesFile(&statsBackgroundImages, "StatsBackground");
 }
@@ -199,6 +202,7 @@ void STDCALL freeCustomImages()
 	FREE_IMAGE_FILE(unassignStatsBtnImages);
 	FREE_IMAGE_FILE(stashBtnsImages);
 	FREE_IMAGE_FILE(sharedGoldBtnsImages);
+	FREE_IMAGE_FILE(sortBtnsImages);
 	FREE_IMAGE_FILE(newStatsInterfaceImages);
 	FREE_IMAGE_FILE(statsBackgroundImages);
 }

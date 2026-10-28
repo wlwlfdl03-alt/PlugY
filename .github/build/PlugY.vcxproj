@@ -87,6 +87,7 @@
     <ClCompile Include="$(PlugYSrc)SharedSaveFile.cpp" />
     <ClCompile Include="$(PlugYSrc)SkillPerLevelUp.cpp" />
     <ClCompile Include="$(PlugYSrc)SkillsPoints.cpp" />
+    <ClCompile Include="$(PlugYSrc)SortStash.cpp" />
     <ClCompile Include="$(PlugYSrc)StatPerLevelUp.cpp" />
     <ClCompile Include="$(PlugYSrc)StatsPoints.cpp" />
     <ClCompile Include="$(PlugYSrc)UberQuest.cpp" />

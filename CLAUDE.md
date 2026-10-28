@@ -87,6 +87,37 @@
 | 골드 필드 클릭 판정 | 8B6B0 (함수 시작) | 8FA30 | 89921 (call) |
 | IsLodGame 변수 | 119854 | 1087B4 | 3A04F4 |
 
+## 창고 정렬 버튼 (`SortStash.cpp`, `sortStashCore.h`)
+
+- 사용자가 준 웹앱 정렬 로직 `sort_stash.js`의 `sortPlugyAllPages`를 옮긴 것이다. 원본 JS는 저장소에 없다.
+  - 정렬은 `compareSortableItems`, 배치는 `packSortedItems`(groupBreak, rowBreak 켬)이다.
+  - 오름차순이다. 노말부터 유니크 순으로 첫 페이지부터 채운다.
+- 사용자가 정한 차이:
+  - 12차 키(pictureId)는 쓰지 않는다.
+  - 13차 키(표시 이름)는 아이템 코드, 그다음 유니크/세트 행 번호로 비교한다. 게임 언어와 무관하다.
+  - 정렬이 끝나면 그 창고 모든 페이지의 이름과 인덱스 플래그를 지운다.
+  - 채팅 명령어는 없다. 창고 버튼만 있다.
+- 사용자에게 확인받지 않은 차이:
+  - 세트 순서는 이름 대신 sets.txt 행 순서이다.
+  - `MaxPersonnalPages`/`MaxSharedPages`로 페이지가 모자라면 JS 공유창고 경로처럼 그룹/줄 구분 없이 다시 배치한다. 그래도 모자라면 아무것도 옮기지 않는다.
+- 버튼 조건: `ActiveMultiPageStash=1`, `ActiveBigStash=1`, 1.13c/1.13d/1.14d이다(`active_sortStash` = `active_bigStash && active_classicBigStash`).
+  - 버튼 그림은 `PlugY\SortBtns.dc6`이다. 사용자가 고른 시안 9번(금색 순환 화살표)이다.
+  - 그림은 `tools/make_sort_btn.py <act1 pal.dat>`로 만든다. 팔레트는 저작권 파일이라 커밋하지 않는다.
+  - 기본 위치는 아래 버튼 줄(Y=0x40)이다. X는 800x600에서 0xE0(다음 인덱스 버튼 오른쪽), 640x480에서 0x4F(공유 버튼 왼쪽)이다.
+- 동작 흐름:
+  - 클라이언트 버튼이 `US_SORT_STASH`를 보내면 서버가 `sortStash`를 실행한다. 서버가 정렬하고 아이템을 옮긴다.
+  - 서버는 아이템마다 `UC_SORT_ITEM`(unitId, 페이지, x|y<<8)을 보내고, 마지막에 `UC_SORT_DONE`을 보낸다.
+  - 클라이언트는 unitId로 아이템을 찾아 같은 이동을 한다(`moveStashItems`). 계산은 서버만 한다.
+- 아이템 이동은 `changeToSelectedStash_10`과 같은 방식이다.
+  - 현재 페이지는 `D2InvRemoveItem`(`ItemData2` 보존)으로 빼고 `D2InvAddItem`으로 넣는다.
+  - 다른 페이지는 `ptListItem` 목록에 넣고 `path->x/y`를 쓴다.
+- 무기/방어구/부위/클래스 판정은 `D2CheckItemType`(Equiv 체인)으로 한다. 아이템 타입 행은 코드로 찾는다(`loadTypeIndex`, `PlugY.log`에 기록).
+- `sortStashCore.h`는 게임 함수를 쓰지 않는다. Linux에서 `tools/sort_stash_test.cpp`로 빌드해 JS 결과와 비교할 수 있다.
+  ```
+  g++ -o sort_stash_test tools/sort_stash_test.cpp
+  ./sort_stash_test [gridW gridH maxPages] < items.txt
+  ```
+
 ## 바이너리 분석 방법
 
 - 사용자가 올린 파일로 버전을 확인한다.
@@ -123,6 +154,17 @@
 8. TCP/IP: 클래식 개인 창고 저장, `ActiveSharedStashInMultiPlayer=1`일 때 `_CLASSIC_` 저장
 9. LoD 회귀: 창고(BigStash 켬/끔), 기존 `.d2x`와 `_LOD_` 파일, 스탯/스킬/룬워드 페이지
 10. 예외: 클래식 → LoD 전환 캐릭터, LoD 미설치 환경의 BigStash 배경
+
+창고 정렬 버튼 (아직 인게임 테스트 전):
+
+11. 버튼: BigStash 켬일 때만 보인다. 그림(보통/눌림), 팝업, 800x600과 640x480 위치가 다른 버튼이나 닫기 버튼과 겹치지 않는다.
+12. 정렬 결과: 품질 블록 순서, 그룹마다 새 페이지, 같은 아이템끼리 한 줄, 룬/보석/참 순서, 세트는 세트별 페이지
+13. 페이지: 모자라면 페이지가 생긴다. 이름과 인덱스가 지워진다. 페이지를 오가도 위치가 같다.
+14. 저장: `/save`와 재접속 후 위치가 유지된다. 남는 빈 페이지가 없어진다.
+15. 공유 창고와 클래식(SC/HC), LoD 각각
+16. TCP/IP 클라이언트: 정렬 후 화면과 저장 결과가 같다.
+17. `MaxPersonnalPages`를 작게 하면 그룹 구분 없이 배치된다. 그래도 모자라면 아무것도 옮기지 않는다.
+18. 첫 정렬 뒤 `PlugY.log`에 `sortStash : item type weap = ...` 줄이 있고, 값이 -1이 아니다(warl만 -1).
 
 ## 남은 것
 

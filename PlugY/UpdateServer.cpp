@@ -11,6 +11,7 @@
 #include "statsPoints.h"
 #include "skillsPoints.h"
 #include "infinityStash.h"
+#include "sortStash.h"
 #include "commands.h"
 #include "common.h"
 
@@ -58,6 +59,7 @@ int STDCALL handleServerUpdate(Unit* ptChar, WORD param)
 		case US_SELECT_NEXT_INDEX2 :	selectNextIndex2Stash( ptChar ); return 1;
 		case US_INSERT_PAGE:			insertStash(ptChar); selectNextStash(ptChar); return 1;
 		case US_DELETE_PAGE:			deleteStash(ptChar, false); return 1;
+		case US_SORT_STASH:			sortStash(ptChar); return 1;
 
 		case US_SAVE :					savePlayers( ptChar ); return 1;
 
