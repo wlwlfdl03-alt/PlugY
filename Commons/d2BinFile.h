@@ -565,7 +565,8 @@ struct UniqueItemsBIN //size=0x14C (332)
 	WORD	uniqueId;		//+00
 	BYTE	uk1[0x20];		//+02
 	WORD	uniqueNameId;	//+22
-	BYTE	uk2[0x08];		//+24
+	BYTE	uk2[0x04];		//+24
+	DWORD	itemCode;		//+28 code of the base item (dwBaseItemCode in D2MOO)
 	union {
 		BYTE	flag;		//+2C
 		struct {
@@ -590,7 +591,8 @@ struct SetItemsBIN //size=0x1B8 (source : fct of dll)
 	char	index[0x20];	//+02
 	BYTE	uk1;			//+04
 	WORD	setNameId;		//+24
-	BYTE	uk2[0x6];		//+26
+	BYTE	uk2[0x2];		//+26
+	DWORD	itemCode;		//+28 code of the base item (szItemCode in D2MOO)
 	WORD	setId;			//+2C
 	BYTE	uk3[0x18A];		//+2E
 };

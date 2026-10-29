@@ -235,6 +235,8 @@ F8(STD,  D2Common,10655,10655,10655,10655,10309,10297,10218,10694,111D30,	Diffic
 //F8(STD,  D2Common,10659,10659,10659,00000,00000,00000,00000,00000,00000,	TreasureClassBIN*,		D2GetTreasureClassBIN, (WORD id, DWORD uk));
 //F8(STD,  D2Common,10668,10668,10668,10450,10953,00000,00000,00000,00000,	SuperUniqueBIN*,		D2GetSuperUniqueBIN, (WORD id));
 F8(STD,  D2Common,10672,10672,00000,00000,00000,00000,00000,00000,00000,	int*,		D2GetNbItemTypesBIN, ());//ONLY 1.09 : return the point on the number
+F8(STD,  D2Common,10607,10607,00000,00000,00000,00000,00000,00000,00000,	int*,		D2GetNbUniqueItemsBIN, ());//ONLY 1.09 : return the point on the number, the table follows
+F8(STD,  D2Common,10609,10609,00000,00000,00000,00000,00000,00000,00000,	int*,		D2GetNbSetItemsBIN, ());//ONLY 1.09 : return the point on the number, the table follows
 F8(STD,  D2Common,10695,10695,10695,10927,10899,10276,10106,10911,227E70,	DWORD,		D2GetItemQuality, (Unit* ptItem));
 F8(STD,  D2Common,10707,10707,10707,10911,10303,10989,10202,10458,2280A0,	DWORD,		D2TestFlags, (Unit* ptUnit, DWORD flags, DWORD line, const char* file));
 //F8(STD,  D2Common,10708,10708,10708,00000,00000,00000,00000,00000,00000,	void,		D2SetFlags, (Unit* ptUnit, DWORD flags, DWORD bitNewValue));

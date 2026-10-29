@@ -6,6 +6,7 @@ Test driver of PlugY/sortStashCore.h on Linux (no game needed) :
 
 Input : one item per line
   unitId code itype width height quality isRuneword ethereal weapon armor bodyPos specialRank tier setKey row runeword picture
+  [baseCode itemTier] : base of the unique/set row and tier of code (upgraded items), default code and tier
 Output : "pages N compact C" then one line per item, in input order : "unitId page x y".
 */
 #include <stdio.h>
@@ -20,12 +21,18 @@ int main(int argc, char** argv)
 	int nb = 0, size = 64;
 	SortItem* items = (SortItem*)malloc(size * sizeof(SortItem));
 	SortItem it;
-	int rw, eth, weap, arm;
+	int rw, eth, weap, arm, nbRead;
+	char line[256];
 	memset(&it, 0, sizeof(it));
-	while (scanf("%u %4s %4s %d %d %d %d %d %d %d %d %d %d %d %d %d %d", &it.unitId, it.code, it.itype, &it.width, &it.height,
-			&it.quality, &rw, &eth, &weap, &arm, &it.bodyPos, &it.specialRank, &it.tier, &it.setKey, &it.row,
-			&it.runeword, &it.picture) == 17)
+	while (fgets(line, sizeof(line), stdin) && (nbRead = sscanf(line, "%u %4s %4s %d %d %d %d %d %d %d %d %d %d %d %d %d %d %4s %d",
+			&it.unitId, it.code, it.itype, &it.width, &it.height, &it.quality, &rw, &eth, &weap, &arm, &it.bodyPos,
+			&it.specialRank, &it.tier, &it.setKey, &it.row, &it.runeword, &it.picture, it.baseCode, &it.itemTier)) >= 17)
 	{
+		if (nbRead < 19)
+		{
+			strcpy(it.baseCode, it.code);
+			it.itemTier = it.tier;
+		}
 		it.isRuneword = rw != 0;
 		it.isEthereal = eth != 0;
 		it.isWeapon = weap != 0;
