@@ -8,6 +8,8 @@ on:
 jobs:
   build:
     runs-on: windows-2022
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -27,3 +29,12 @@ jobs:
         with:
           name: PlugY
           path: artifact/
+
+      # Tag push : publish the artifact files as a release (the tag name is the release name).
+      - name: Release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          Compress-Archive -Path artifact\* -DestinationPath "PlugY-$env:GITHUB_REF_NAME.zip"
+          gh release create "$env:GITHUB_REF_NAME" "PlugY-$env:GITHUB_REF_NAME.zip" --title "PlugY $env:GITHUB_REF_NAME" --generate-notes
