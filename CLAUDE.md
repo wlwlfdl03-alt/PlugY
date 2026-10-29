@@ -3,12 +3,14 @@
 원본 PlugY(Yohann NICOLAS, ChaosMarc/PlugY)의 포크다. LoD 전용이던 PlugY 기능을 Diablo II Classic 캐릭터에서도 쓸 수 있게 하는 것이 목표다.
 
 - LoD: 1.09b - 1.13d, 1.14d (원본과 같음)
-- Classic: 1.09b - 1.13d, 1.14d (LoD와 같음, 인게임 테스트 완료)
+- Classic: 1.09b - 1.13d, 1.14d (LoD와 같음)
 
 ## 작업 규칙 (사용자가 정한 것)
 
 - 파일은 수정하기 전에 무엇을 어떻게 바꿀지 사용자에게 보고하고, 허가를 받은 뒤 고친다. 코드, 스크립트, 문서 모두 같다.
 - 문서(`CLAUDE.md`, `README.md`)는 모든 작업이 끝난 뒤 마지막에 갱신한다.
+  - 갱신할 때는 문서 전체를 확인해서 한 번에 고친다. 항목마다 따로 묻지 않는다.
+- 인게임 테스트는 목록으로 따로 진행하지 않는다. 문제가 있으면 사용자가 보고한다.
 - 인게임 동작이나 게임 지식에 확신이 없으면 추측하지 말고 반드시 사용자에게 묻는다.
 - 원본 소스의 주석은 수정하지 않는다.
 - 게임 바이너리(`D2Client.dll`, `Game.exe` 등)는 저작권 파일이므로 저장소에 커밋하지 않는다. 분석이 필요하면 사용자에게 업로드를 요청하고, 세션 임시 폴더에서만 쓴다.
@@ -22,15 +24,14 @@
 - CI 전용 프로젝트 `.github/build/PlugY.vcxproj`가 있다. 원본과 같은 소스와 Release|Win32 설정이고, 다른 점은 둘이다.
   - VS2022(v143) 툴셋
   - 정적 CRT(`/MT`)
-- `.github/workflows/build.yml`가 push, PR, 수동 실행 때 windows-2022에서 빌드하고 `PlugY` 아티팩트를 올린다. 사용자는 이 아티팩트로 테스트한다.
+- `.github/workflows/build.yml`가 push, PR, 수동 실행 때 windows-2022에서 빌드하고 `PlugY` 아티팩트를 올린다.
   - 아티팩트는 게임 폴더 구조와 같다. 최상위에 `PlugY.dll`, `PlugY.pdb`가 있고, `PlugY\`에 `PlugYInstaller/PlugY/`의 데이터 파일(dc6, `LocalizedStrings.ini` 등)이 있다.
   - 새 이미지나 문자열을 추가하면 DLL만으로는 동작하지 않는다. `PlugY\`의 파일도 함께 복사해야 한다(없는 dc6는 "Don't find Buttons Images File" 오류로 종료된다).
 - 태그를 푸시하면 같은 워크플로가 릴리스를 만든다(`Release` 단계, 태그 실행일 때만).
   - 아티팩트 파일을 `PlugY-<태그>.zip`으로 묶어 `PlugY <태그>` 릴리스에 첨부한다. 릴리스 노트는 자동 생성이다.
-  - 이름 규칙(사용자가 정함): `14.03-classic`. 코드의 `PLUGY_VERSION "14.03"`은 그대로 둔다. 같은 태그로는 한 번만 만들 수 있으므로 다음은 `14.03-classic.2`처럼 쓴다.
-  - Claude 세션은 태그를 푸시할 수 없다(HTTP 403, 브랜치 푸시는 된다). 태그는 사용자가 PC에서 푸시한다.
+  - 이름 규칙(사용자가 정함): `14.03-classic`. 코드의 `PLUGY_VERSION "14.03"`은 그대로 둔다. 태그는 한 번만 쓸 수 있으므로, 이미 쓴 이름이면 `14.03-classic.2`처럼 번호를 붙인다.
+  - Claude 세션은 태그를 푸시할 수 없다(HTTP 403, 브랜치 푸시는 된다). GitHub 도구에도 태그나 릴리스를 만드는 기능이 없다. 태그는 사용자가 PC에서 푸시한다.
   - GitHub 웹에서 릴리스를 직접 발행하면 워크플로의 `gh release create`가 "이미 있음"으로 실패한다. 태그만 푸시한다.
-  - 첫 릴리스: `14.03-classic`(PR #17 병합 커밋 `07ad4f7`)
 - `PlugY/`에 .cpp를 추가하면 `.github/build/PlugY.vcxproj`의 `ClCompile` 목록에도 추가한다.
 - Linux에서는 `tools/check_syntax.sh`로 clang 문법 검사만 할 수 있다. 필요한 패키지는 `clang`과 `mingw-w64-i686-dev`이다.
   - 이 검사는 링크를 하지 않는다. 함수 시그니처를 바꾸면 헤더 선언과 모든 호출부를 직접 grep으로 확인한다(PR #2의 LNK2001이 이렇게 생겼다).
@@ -73,7 +74,7 @@
 - 룬워드 페이지(`NewInterface_Runewords.cpp`, `/page 6`)는 LoD 전용으로 남겼다.
 - BigStash를 끄면 클래식은 원래 6x4 창고 화면을 쓴다.
   - 그 위에 PlugY 버튼을 그리는 기본 Y 위치가 다르다(`Interface_Stash.cpp`). 골드 버튼 0xE4, 페이지 이름 0xD6, 골드 필드 0xF2이고, LoD는 각각 0x1A8, 0x19A, 0x1B6이다.
-  - 이 값은 D2Client의 클래식 분기 상수(골드 필드 -0xF2/-0xF4, "Gold Max" -0xDB)에서 왔고, 1.13c, 1.13d, 1.14d 모두 같다. 다른 버전도 인게임 테스트(3번)를 통과했다.
+  - 이 값은 D2Client의 클래식 분기 상수(골드 필드 -0xF2/-0xF4, "Gold Max" -0xDB)에서 왔고, 1.13c, 1.13d, 1.14d 모두 같다.
   - 판별은 `isLodStashLayout()`(`BigStash.cpp`)이 한다.
 
 ### BigStash 클래식 화면 (`BigStash.cpp`, 모든 버전)
@@ -118,6 +119,10 @@
   - 12차 키(그림 변형)는 `ItemData+0x49`(`varGfx`, D2MOO `nInvGfxIdx`)이다. 같은 그림끼리 붙이기만 하고, 줄은 나누지 않는다(JS와 같음).
   - 13차 키(표시 이름)는 아이템 코드, 그다음 유니크/세트 행 번호로 비교한다. 게임 언어와 무관하다.
   - 세트 순서는 이름 대신 sets.txt 행 순서이다.
+  - 큐브로 업그레이드한 유니크/세트 아이템은 uniqueitems.txt / setitems.txt 행의 원래 베이스로 정렬한다(등급, 13차 키, 같은 줄 판정). 같은 행 안에서는 실제 등급, 실제 코드 순이다.
+    - 예: 배틀 건틀릿으로 업그레이드한 메이지피스트는 메이지피스트 줄 끝에 붙는다(노말, 익셉셔널, 엘리트 순).
+    - 원래 베이스 코드가 그 아이템의 normcode/ubercode/ultracode 중 하나가 아니면 실제 코드를 쓴다.
+    - 에테리얼과 링/아뮬렛/주얼의 그림 순서는 그대로 두었다. 같은 유니크라도 그림이 다를 수 있다.
   - 정렬이 끝나면 그 창고 모든 페이지의 이름과 인덱스 플래그를 지운다.
   - 채팅 명령어는 없다. 창고 버튼만 있다.
   - `MaxPersonnalPages`/`MaxSharedPages`로 페이지가 모자라면 JS 공유창고 경로처럼 그룹/줄 구분 없이 다시 배치한다. 그래도 모자라면 아무것도 옮기지 않는다.
@@ -154,8 +159,10 @@
   - items.txt code +0x80 ~ ultracode +0x8C, invwidth/invheight +0x10F/+0x110, type +0x11E
   - runes.txt 0x120 레코드(itype WORD +0x86), setitems.txt 0x1B8 레코드(set +0x2C), itemtypes 0xE4 레코드
   - `SgptDataTables`: nbItemTypes +0xBFC, setItems +0xC18, nbSetItems +0xC1C. txt 개수 변수의 실제 주소와 맞춰 봤다.
+  - uniqueitems.txt 0x14C 레코드(code +0x28), setitems.txt code +0x28(D2MOO 1.10). `SgptDataTables`: uniqueItems +0xC24, nbUniqueItems +0xC28. `d2BinFile.h`의 `itemCode` 필드
 - 1.09 (1.09b, 1.09d): 구조가 1.10 이상과 달라서 `IS_109`(`version_D2Common <= V109d`) 분기로 처리한다. 1.10 이상 경로는 그대로다.
   - 1.09 값은 D2Common getter 함수와 txt 필드 테이블(스택에 만드는 BINField 배열)에서 확인했다. 1.09b와 1.09d는 쓰는 함수 27개의 본문, 필드 위치, 레코드 크기가 모두 같다.
+    - 업그레이드 정렬에 쓰는 `#10607`, `#10609`와 uniqueitems.txt, setitems.txt, items.txt(normcode) 필드도 1.09b와 1.09d가 같다.
 
   | 항목 | 1.10 이상 | 1.09 |
   |---|---|---|
@@ -163,22 +170,27 @@
   | ItemData / 소켓 인벤토리 | Unit+14 / +60 | Unit+70 / +84 (`shifting` 사용) |
   | quality, flags | ItemData +00, +18 | 같음 |
   | uniqueID / 그림 변형 | ItemData +28 / +49 | `#10732` / `#10727` (+24 / +45) |
-  | items.txt | `ItemsBIN` | code +144, ubercode +14C, ultracode +150, invwidth/invheight +1A4/+1A5, type BYTE +1B3 |
+  | items.txt | `ItemsBIN` | code +144, normcode +148, ubercode +14C, ultracode +150, invwidth/invheight +1A4/+1A5, type BYTE +1B3 |
   | itemtypes 수 | `SgptDataTables->nbItemTypes` | `#10672` (1.09에서는 `SgptDataTables`를 쓸 수 없다) |
   | runes.txt | `RunesBIN` (0x120) | 0x118 레코드, complete +80, itype BYTE +86, etype BYTE +8C, rune +90 |
   | 세트 | sets.txt 행 (`setItems[].setId`) | setitems.txt 행이 곧 세트이고, uniqueID가 세트 행 번호이다 |
+  | 유니크 베이스 코드 | uniqueitems.txt +28 | `#10607`(개수, 그 뒤에 표 포인터), 0xE4 레코드, code +00 |
+  | 세트 베이스 코드 | setitems.txt +28 | `#10609`(개수, 그 뒤에 표 포인터), 0x534 레코드(한 행이 한 세트), item1 ~ item6 코드 +8C부터 0x3C 간격 |
 
   - 세트 순서(사용자가 정함): 세트끼리는 setitems.txt 행 순서이고, 같은 세트 안에서는 아이템 코드 순서이다.
+  - 1.09 세트 조각은 아이템 코드와 같은 조각을 먼저 찾고, 없으면 같은 노말/익셉셔널/엘리트 계열의 조각을 쓴다.
+  - 1.09 큐브에는 익셉셔널/엘리트로 바꾸는 출력(`exc`/`eli`)이 없다(D2Common의 cubemain 수정자 문자열로 확인). 그래서 1.09에서는 업그레이드 아이템이 생기지 않는다.
   - 아이템 이동(`moveStashItems_9`)은 `changeToSelectedStash_9`과 같은 방식이다.
     - 현재 페이지의 노드를 인벤토리 목록에서 직접 떼고 `#10250`으로 격자 칸을 비운다.
     - 1.09의 `D2InvAddItem`은 격자만 채운다. 노드는 `#10242`가 새로 만들어 연결한다. `D2InvRemoveItem`(#10243)은 노드를 해제하지만 격자는 비우지 않는다.
     - 다른 페이지에 놓을 아이템은 `#10328`/`#10331`로 위치를 쓰고 노드를 그 페이지 목록에 연결한다.
-  - 1.09 전용 함수 `D2SetPosX`(#10328), `D2SetPosY`(#10331), `D2GetNbItemTypesBIN`(#10672), `D2GetVarGfxIndex`(#10727)는 `Commons/D2Funcs.h`에 있다. 다른 버전 열은 `00000`이다.
+  - 1.09 전용 함수 `D2SetPosX`(#10328), `D2SetPosY`(#10331), `D2GetNbItemTypesBIN`(#10672), `D2GetVarGfxIndex`(#10727), `D2GetNbUniqueItemsBIN`(#10607), `D2GetNbSetItemsBIN`(#10609)는 `Commons/D2Funcs.h`에 있다. 다른 버전 열은 `00000`이다.
 - `sortStashCore.h`는 게임 함수를 쓰지 않는다. Linux에서 `tools/sort_stash_test.cpp`로 빌드해 JS 결과와 비교할 수 있다.
   ```
   g++ -o sort_stash_test tools/sort_stash_test.cpp
   ./sort_stash_test [gridW gridH maxPages] < items.txt
   ```
+  - 입력 줄 끝의 `baseCode itemTier` 열(업그레이드한 유니크/세트)은 생략할 수 있다. 생략하면 `code`, `tier`와 같다.
 
 ## 바이너리 분석 방법
 
@@ -205,68 +217,3 @@
       --113c <1.13c D2Client.dll> --113d <1.13d D2Client.dll> --114d <1.14d Game.exe>
   ```
   - 스크립트의 패치 표와 `BigStash.cpp`의 R8 값이 다르면 실패로 나온다. 둘을 함께 고친다.
-
-## 인게임 테스트 목록
-
-모든 버전에서 통과했다(1.13c, 1.13d, 1.14d, PR #13 뒤 1.09b, 1.09d, PR #16 뒤 1.10, 1.11, 1.11b, 1.12와 1.13c, 1.13d, 1.14d 회귀). 창고 관련 코드를 바꾸면 다시 확인한다.
-
-0. 준비
-   - 세이브 폴더를 백업한다.
-   - `ActiveLogFile=1`, `ActiveCheckMemory=1`
-   - 테스트용 캐릭터: 클래식 SC, 클래식 HC, LoD
-1. 실행
-   - 오류창 없이 메인 화면까지 뜬다.
-   - `PlugY.log`에 BigStash 클래식 패치 줄이 있고 `Error`가 없다.
-2. 클래식 + BigStash 켬: 배경, 10x10 격자, 기존 6x4 아이템 위치, 페이지 이름과 팝업, 골드 필드 표시와 클릭(인출 창), 골드 넣기/빼기 버튼, 하단 버튼, 닫기, 800x600과 640x480
-3. 클래식 + BigStash 끔: 원래 클래식 화면, 페이지 이름 위치, 골드 버튼 위치, 하단 버튼, 골드 클릭
-4. 클래식 멀티페이지: 페이지 저장과 재접속, Shift 이동, 인덱스, `/rp /ip /dp /sp /tp /setindex /resetindex`, `.d2x` 생성, 세트 아이템 녹색 표시
-5. 공유 창고 분리: `_CLASSIC_`/`_CLASSIC_HC_` 생성, LoD와 섞이지 않음, 클래식끼리 공유, 공유 골드, `OpenSharedStashOnLoading`
-6. 클래식 스탯/스킬: 스탯 되돌리기(KeyUsed, Shift), 팝업, 스킬 되돌리기 버튼, `/page 1`~`5`, `/page 6`은 기본 스탯 화면
-7. 저장: 자동 백업 폴더 내용, `/save`, `/renamechar`
-8. TCP/IP: 클래식 개인 창고 저장, `ActiveSharedStashInMultiPlayer=1`일 때 `_CLASSIC_` 저장
-9. LoD 회귀: 창고(BigStash 켬/끔), 기존 `.d2x`와 `_LOD_` 파일, 스탯/스킬/룬워드 페이지
-10. 예외: 클래식 → LoD 전환 캐릭터, LoD 미설치 환경의 BigStash 배경
-
-창고 정렬 버튼:
-
-- 1.13c, 1.13d, 1.14d에서 싱글/TCP/IP, 클래식/확장팩, 개인/공유 창고 조합을 모두 확인했다(PR #8 뒤 사용자 보고).
-- 1.09b, 1.09d에서도 통과했다(PR #13 뒤 사용자 보고).
-- 1.10, 1.11, 1.11b, 1.12에서도 통과했다(PR #16 뒤 사용자 보고).
-- 640x480(11번)과 `MaxPersonnalPages`/`MaxSharedPages` 제한(17번)도 1.14d LoD에서 확인했다(PR #11 뒤 사용자 보고).
-  - 640x480에서는 버튼이 HP 구체 뒤에 가려지고 클릭은 된다.
-  - 17번: 개인 창고 145개(3페이지 제한)는 빈칸 없이 3페이지에 배치됐고, 155개(3페이지 제한)와 10942개(5페이지 제한)는 아무것도 옮기지 않았다. 공유 창고 145개(3페이지 제한)는 서버와 클라이언트 체크섬이 같았고, 148개는 아무것도 옮기지 않았다.
-    - 개인 창고 시험은 PR #7 빌드의 DLL로 했다. PR #8은 이 페이지 제한 로직(`sortStashPlan`)을 바꾸지 않았고, 공유 창고 시험은 최신 빌드로 했다.
-
-11. 버튼: BigStash 켬일 때만 보인다. 그림(보통/눌림), 팝업, 800x600 위치가 다른 버튼이나 닫기 버튼과 겹치지 않는다. 640x480에서는 HP 구체 뒤에 가려지지만 클릭은 된다.
-12. 정렬 결과: 품질 블록 순서, 그룹마다 새 페이지, 같은 아이템끼리 한 줄, 룬/보석/참 순서, 세트는 세트별 페이지, 룬워드는 룬워드별 페이지, 같은 그림의 링/아뮬렛/참/주얼이 붙어 있음
-13. 페이지: 모자라면 페이지가 생긴다. 이름과 인덱스가 지워진다. 페이지를 오가도 위치가 같다.
-14. 저장: `/save`와 재접속 후 위치가 유지된다. 남는 빈 페이지가 없어진다.
-15. 공유 창고와 클래식(SC/HC), LoD 각각
-16. TCP/IP 클라이언트: 정렬 후 화면과 저장 결과가 같다.
-17. `MaxPersonnalPages`를 작게 하면 그룹 구분 없이 배치된다. 그래도 모자라면 아무것도 옮기지 않는다.
-18. 첫 정렬 뒤 `PlugY.log`에 `sortStash : item type weap = ...` 줄이 있고, 값이 -1이 아니다(warl만 -1).
-
-## 남은 것
-
-- 1.09b Game 구조체는 난이도(+0x4D)와 확장팩 여부(+0x50)가 다른 버전보다 0x20 앞에 있다. 다른 Game 필드를 1.09b에서 쓸 때도 확인한다.
-- 독일어/프랑스어/중국어 설치 README(`PlugYInstaller/*.txt`)는 클래식 지원 내용으로 갱신하지 않았다.
-
-## 이력
-
-- PR #1: Classic 캐릭터 지원 (저장/로드, 공유 창고 분리, UI 체크 제거, 1.13c BigStash 클래식 화면)
-- PR #2: MSVC CI 빌드 추가, `backupSaveFiles` 선언 누락으로 생긴 링크 오류 수정
-- PR #3: 1.13c Fog #10227 패치 위치 수정 (`8CC05` → `8CC06`)
-- PR #4: 1.13d / 1.14d BigStash 클래식 화면
-- PR #5: `README.md` 재작성
-- PR #6: `CLAUDE.md`와 검증 도구(`tools/`) 추가
-- PR #7: 창고 정렬 버튼 (`SortStash.cpp`, `sortStashCore.h`, `SortBtns.dc6`), CI 아티팩트에 `PlugY\` 데이터 파일 포함
-- PR #8: 창고 정렬을 클라이언트도 직접 계산하고 서버는 체크섬만 보냄 (TCP/IP 큰 창고에서 메시지가 유실되던 문제 수정)
-- PR #9: PR #8 뒤 창고 정렬 인게임 테스트 결과를 `CLAUDE.md`에 기록
-- PR #10: `README.md`에 창고 정렬 버튼 추가
-- PR #11: 포크 이후 변경 전체 검토 후 정리 (쓰지 않는 capstone `.whl` 삭제, 이 이력에 PR #9, #10 추가, `README.md` 정렬 버튼 조건에 `ActiveMultiPageStash=1` 추가)
-- PR #12: 창고 정렬의 640x480 버튼 위치와 페이지 제한 테스트 결과를 기록 (640x480에서는 버튼이 HP 구체 뒤에 가려지지만 그대로 두기로 함, 페이지 제한 시 빈칸 없는 재배치를 확정)
-- PR #13: 1.09b / 1.09d BigStash 클래식 화면과 창고 정렬, 1.09b 싱글 클래식 공유 창고 판정 수정(Game+0x50)
-- PR #14: PR #13 작업 내용과 1.09b / 1.09d 테스트 결과를 `CLAUDE.md`, `README.md`에 기록, 작업 규칙 추가(수정 전 보고와 허가, 문서는 마지막에 갱신)
-- PR #15: 이 이력에 PR #14 추가(PR #14 병합 뒤 푸시된 줄)
-- PR #16: 1.10 / 1.11 / 1.11b / 1.12 BigStash 클래식 화면과 창고 정렬(모든 버전 지원), 테스트 결과와 문서 갱신
-- PR #17: 태그 푸시 때 GitHub 릴리스 자동 생성(`build.yml`)
