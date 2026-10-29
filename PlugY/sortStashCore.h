@@ -35,8 +35,8 @@ struct SortItem
 	int		bodyPos;			// 0 helm, 2 body, 3 shield, 4 gloves, 5 boots, 6 belt, 7 weapon, 8 other
 	int		specialRank;		// 0 normal, 1 circlet, 2 class item
 	int		tier;				// 0 normal, 1 exceptional, 2 elite
-	int		setKey;				// row of the set in sets.txt (set items)
-	int		row;				// row in uniqueitems.txt / setitems.txt (unique and set items), else 0
+	int		setKey;				// row of the set in sets.txt (set items), in setitems.txt in 1.09
+	int		row;				// row in uniqueitems.txt / setitems.txt (unique and set items, the set in 1.09), else 0
 	int		runeword;			// row in runes.txt (runeword items)
 	int		picture;			// picture variant of the item (rings, amulets, charms, jewels)
 

@@ -7,20 +7,26 @@ error box PlugY shows at startup when ActiveCheckMemory=1.
 
 The game files are not in the repository (copyrighted) : pass the ones you have.
 
-  tools/simulate_patches.py --113c D2Client.dll --113d D2Client.dll --114d Game.exe
+  tools/simulate_patches.py --109b D2Client.dll --109d D2Client.dll --113c D2Client.dll --113d D2Client.dll --114d Game.exe
 
 It also checks that the offsets below are the ones written in the R8(...) lines of
-PlugY/BigStash.cpp (columns 1.13c, 1.13d, 1.14d), so update both together.
+PlugY/BigStash.cpp (columns 1.09b, 1.09d, 1.13c, 1.13d, 1.14d), so update both together.
 """
 import argparse, os, re, struct, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# Per version : image base, IsLodGame RVA (Commons/D2Funcs.h), patches.
+# Per version : image base, IsLodGame RVA (Commons/D2Funcs.h, 0 when there is no 'lod' or 'mouse' patch), patches.
 # Patch kinds : ('push104', rva) existing background path patch, ('cref', rva, target_rva) memc_ref4,
 # ('upd', rva, bank_rva) byte A1->E8 + memt_ref4(bank image), ('lod', rva) memt_dword(IsLodGame),
 # ('mouse', rva) byte 8B->E8 + memt_ref4(0D|IsLodGame<<8) + byte(IsLodGame>>24).
 VERSIONS = {
+    '109b': dict(base=0x6FAA0000, islod=0, patches=[
+        ('push104', 0x45B1C), ('cref', 0x45B06, 0xC093A)] +
+        [('cref', rva, 0xBA00) for rva in (0x38ECF, 0x38FF1, 0x42D46, 0x45052, 0x42D9E, 0x45341, 0x4577E)]),
+    '109d': dict(base=0x6FAA0000, islod=0, patches=[
+        ('push104', 0x45B1C), ('cref', 0x45B06, 0xBFCBA)] +
+        [('cref', rva, 0xB9F0) for rva in (0x38ECF, 0x38FF1, 0x42D46, 0x45052, 0x42D9E, 0x45341, 0x4577E)]),
     '113c': dict(base=0x6FAB0000, islod=0x119854, patches=[
         ('push104', 0x8CC1C), ('cref', 0x8CC06, 0xBF8C), ('upd', 0x998D5, 0x11BC74),
         ('lod', 0x998E4), ('lod', 0x999FB), ('lod', 0x8D14C), ('mouse', 0x8B6B0)]),
@@ -31,7 +37,7 @@ VERSIONS = {
         ('push104', 0x89EB5), ('cref', 0x89E9D, 0x8F20),
         ('cref', 0x8F19C, 0x4DCC0), ('cref', 0x8F2B1, 0x4DCC0), ('cref', 0x8820D, 0x4DCC0), ('cref', 0x89921, 0x4DCC0)]),
 }
-COLUMN = {'113c': 6, '113d': 7, '114d': 8}  # index in the 9 R8 columns
+COLUMN = {'109b': 0, '109d': 1, '113c': 6, '113d': 7, '114d': 8}  # index in the 9 R8 columns
 
 
 def source_offsets():
@@ -97,11 +103,13 @@ def simulate(version, path, written):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument('--109b', dest='v109b', help='D2Client.dll of 1.09b')
+    parser.add_argument('--109d', dest='v109d', help='D2Client.dll of 1.09d')
     parser.add_argument('--113c', dest='v113c', help='D2Client.dll of 1.13c')
     parser.add_argument('--113d', dest='v113d', help='D2Client.dll of 1.13d')
     parser.add_argument('--114d', dest='v114d', help='Game.exe of 1.14d')
     args = parser.parse_args()
-    files = {'113c': args.v113c, '113d': args.v113d, '114d': args.v114d}
+    files = {'109b': args.v109b, '109d': args.v109d, '113c': args.v113c, '113d': args.v113d, '114d': args.v114d}
     if not any(files.values()):
         parser.error('give at least one game file')
     written = source_offsets()
