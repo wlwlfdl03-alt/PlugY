@@ -3,7 +3,7 @@
 원본 PlugY(Yohann NICOLAS, ChaosMarc/PlugY)의 포크다. LoD 전용이던 PlugY 기능을 Diablo II Classic 캐릭터에서도 쓸 수 있게 하는 것이 목표다.
 
 - LoD: 1.09b - 1.13d, 1.14d (원본과 같음)
-- Classic: 1.09b - 1.13d, 1.14d (LoD와 같음, 인게임 테스트 완료)
+- Classic: 1.09b - 1.13d, 1.14d (LoD와 같음)
 
 ## 작업 규칙 (사용자가 정한 것)
 
@@ -22,7 +22,7 @@
 - CI 전용 프로젝트 `.github/build/PlugY.vcxproj`가 있다. 원본과 같은 소스와 Release|Win32 설정이고, 다른 점은 둘이다.
   - VS2022(v143) 툴셋
   - 정적 CRT(`/MT`)
-- `.github/workflows/build.yml`가 push, PR, 수동 실행 때 windows-2022에서 빌드하고 `PlugY` 아티팩트를 올린다. 사용자는 이 아티팩트로 테스트한다.
+- `.github/workflows/build.yml`가 push, PR, 수동 실행 때 windows-2022에서 빌드하고 `PlugY` 아티팩트를 올린다.
   - 아티팩트는 게임 폴더 구조와 같다. 최상위에 `PlugY.dll`, `PlugY.pdb`가 있고, `PlugY\`에 `PlugYInstaller/PlugY/`의 데이터 파일(dc6, `LocalizedStrings.ini` 등)이 있다.
   - 새 이미지나 문자열을 추가하면 DLL만으로는 동작하지 않는다. `PlugY\`의 파일도 함께 복사해야 한다(없는 dc6는 "Don't find Buttons Images File" 오류로 종료된다).
 - 태그를 푸시하면 같은 워크플로가 릴리스를 만든다(`Release` 단계, 태그 실행일 때만).
@@ -73,7 +73,7 @@
 - 룬워드 페이지(`NewInterface_Runewords.cpp`, `/page 6`)는 LoD 전용으로 남겼다.
 - BigStash를 끄면 클래식은 원래 6x4 창고 화면을 쓴다.
   - 그 위에 PlugY 버튼을 그리는 기본 Y 위치가 다르다(`Interface_Stash.cpp`). 골드 버튼 0xE4, 페이지 이름 0xD6, 골드 필드 0xF2이고, LoD는 각각 0x1A8, 0x19A, 0x1B6이다.
-  - 이 값은 D2Client의 클래식 분기 상수(골드 필드 -0xF2/-0xF4, "Gold Max" -0xDB)에서 왔고, 1.13c, 1.13d, 1.14d 모두 같다. 다른 버전도 인게임 테스트(3번)를 통과했다.
+  - 이 값은 D2Client의 클래식 분기 상수(골드 필드 -0xF2/-0xF4, "Gold Max" -0xDB)에서 왔고, 1.13c, 1.13d, 1.14d 모두 같다.
   - 판별은 `isLodStashLayout()`(`BigStash.cpp`)이 한다.
 
 ### BigStash 클래식 화면 (`BigStash.cpp`, 모든 버전)
