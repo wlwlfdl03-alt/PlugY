@@ -200,6 +200,21 @@ static int getRunewordRow(Unit* ptItem)
 	return SORT_NO_RUNEWORD;
 }
 
+// 0 normal, 1 exceptional, 2 elite : code of the item or of the base of its unique/set row.
+static int getTier(DWORD code, DWORD uberCode, DWORD hellCode)
+{
+	if (code == hellCode) return 2;
+	if (code == uberCode) return 1;
+	return 0;
+}
+
+// The code is the item or its normal, exceptional or elite version (an empty code is 0 or spaces).
+static bool isSameBase(DWORD code, DWORD normCode, DWORD uberCode, DWORD hellCode)
+{
+	if (!code || code == 0x20202020) return false;
+	return code == normCode || code == uberCode || code == hellCode;
+}
+
 // ptUnit : item of the stash list (a node in 1.09).
 static void fillSortItem(SortItem* item, Unit* ptUnit)
 {
@@ -207,11 +222,12 @@ static void fillSortItem(SortItem* item, Unit* ptUnit)
 	ItemsBIN* itemsBIN = D2GetItemsBIN(ptItem->nTxtFileNo);
 	ItemData* data = getItemData(ptItem);
 
-	DWORD itemCode, uberCode, hellCode, type;
+	DWORD itemCode, normCode, uberCode, hellCode, type;
 	ZeroMemory(item, sizeof(SortItem));
 	if (IS_109)
 	{
 		itemCode = ITEMSBIN_109(itemsBIN, DWORD, 0x144);
+		normCode = ITEMSBIN_109(itemsBIN, DWORD, 0x148);
 		uberCode = ITEMSBIN_109(itemsBIN, DWORD, 0x14C);
 		hellCode = ITEMSBIN_109(itemsBIN, DWORD, 0x150);	// ultracode
 		type = ITEMSBIN_109(itemsBIN, BYTE, 0x1B3);
@@ -221,6 +237,7 @@ static void fillSortItem(SortItem* item, Unit* ptUnit)
 	else
 	{
 		itemCode = itemsBIN->ItemCode;
+		normCode = itemsBIN->NormCode;
 		uberCode = itemsBIN->UberCode;
 		hellCode = itemsBIN->HellCode;
 		type = itemsBIN->Type;
@@ -256,8 +273,7 @@ static void fillSortItem(SortItem* item, Unit* ptUnit)
 	if (!item->specialRank && !strcmp(item->itype, "circ"))
 		item->specialRank = 1;
 
-	if (itemCode == hellCode)		item->tier = 2;
-	else if (itemCode == uberCode)	item->tier = 1;
+	item->itemTier = getTier(itemCode, uberCode, hellCode);
 
 	// 1.09 : a row of setitems.txt is a set (no row per set item), the unique id of a set item is the row of its set.
 	DWORD uniqueID = IS_109 ? (DWORD)D2GetUniqueID(ptItem) : data->uniqueID;
@@ -267,6 +283,48 @@ static void fillSortItem(SortItem* item, Unit* ptUnit)
 		item->setKey = SgptDataTables->setItems[uniqueID].setId;
 	if (data->quality == ITEMQUALITY_SET || data->quality == ITEMQUALITY_UNIQUE)
 		item->row = uniqueID;
+
+	/*
+	The cube upgrades the base of an item (normal > exceptional > elite) and keeps its unique or set row :
+	the unique and set items are sorted with the base of their row, an upgraded Magefist with the Magefists.
+	1.09 : a row of uniqueitems.txt is 0xE4 bytes (code +00), a row of setitems.txt is a set of 0x534 bytes
+	with the codes of its items (item1 .. item6 : +8C, each 0x3C).
+	*/
+	DWORD baseCode = itemCode;
+	if (data->quality == ITEMQUALITY_UNIQUE && IS_109)
+	{
+		int* nbUniques = D2GetNbUniqueItemsBIN();
+		BYTE* uniques = *(BYTE**)(nbUniques + 1);	// the table follows the number of rows
+		if (uniques && uniqueID < (DWORD)*nbUniques)
+			baseCode = *(DWORD*)(uniques + uniqueID * 0xE4);
+	}
+	else if (data->quality == ITEMQUALITY_UNIQUE && uniqueID < SgptDataTables->nbUniqueItems)
+		baseCode = SgptDataTables->uniqueItems[uniqueID].itemCode;
+	else if (data->quality == ITEMQUALITY_SET && IS_109)
+	{
+		int* nbSets = D2GetNbSetItemsBIN();
+		BYTE* sets = *(BYTE**)(nbSets + 1);	// the table follows the number of rows
+		DWORD found = 0;
+		for (int i = 0; sets && uniqueID < (DWORD)*nbSets && i < 6; i++)
+		{
+			DWORD code = *(DWORD*)(sets + uniqueID * 0x534 + 0x8C + i * 0x3C);
+			if (code == itemCode)
+			{
+				found = code;
+				break;
+			}
+			if (!found && isSameBase(code, normCode, uberCode, hellCode))
+				found = code;
+		}
+		if (found)
+			baseCode = found;
+	}
+	else if (data->quality == ITEMQUALITY_SET && uniqueID < SgptDataTables->nbSetItems)
+		baseCode = SgptDataTables->setItems[uniqueID].itemCode;
+	if (!isSameBase(baseCode, normCode, uberCode, hellCode))
+		baseCode = itemCode;
+	codeToString(baseCode, item->baseCode);
+	item->tier = getTier(baseCode, uberCode, hellCode);
 	item->runeword = getRunewordRow(ptItem);
 	item->picture = IS_109 ? D2GetVarGfxIndex(ptItem) : data->varGfx;
 }

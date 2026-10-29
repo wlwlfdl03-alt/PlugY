@@ -8,6 +8,8 @@
 	Differences with sort_stash.js :
 	- runewords are grouped by runeword (row in runes.txt, a new page for each one) before the other keys,
 	- key 13 (display name) is the item code then the unique/set row,
+	- unique and set items upgraded by the cube are sorted with the base of their row (tier and code),
+	  then by their own tier and code : an upgraded Magefist stays on the row of the Magefists,
 	- the sets are ordered by their row in sets.txt, not by name,
 	- equal items keep the order of their unit id.
 
@@ -34,7 +36,9 @@ struct SortItem
 	bool	isArmor;			// item type equivalent to "armo"
 	int		bodyPos;			// 0 helm, 2 body, 3 shield, 4 gloves, 5 boots, 6 belt, 7 weapon, 8 other
 	int		specialRank;		// 0 normal, 1 circlet, 2 class item
-	int		tier;				// 0 normal, 1 exceptional, 2 elite
+	int		tier;				// 0 normal, 1 exceptional, 2 elite (of baseCode)
+	char	baseCode[5];		// code of the base of the unique/set row (before a cube upgrade), else code
+	int		itemTier;			// tier of code
 	int		setKey;				// row of the set in sets.txt (set items), in setitems.txt in 1.09
 	int		row;				// row in uniqueitems.txt / setitems.txt (unique and set items, the set in 1.09), else 0
 	int		runeword;			// row in runes.txt (runeword items)
@@ -264,8 +268,10 @@ static int sortCompareItems(const SortItem* a, const SortItem* b)
 		SORT_CMP_STR(a->groupItem, b->groupItem);
 		SORT_CMP_INT(a->picture, b->picture);
 	}
-	SORT_CMP_STR(a->code, b->code);
+	SORT_CMP_STR(a->baseCode, b->baseCode);
 	SORT_CMP_INT(a->row, b->row);
+	SORT_CMP_INT(a->itemTier, b->itemTier);
+	SORT_CMP_STR(a->code, b->code);
 	SORT_CMP_INT(a->unitId, b->unitId);
 	return 0;
 }
@@ -308,10 +314,10 @@ static bool sortSameGroup(const SortItem* a, const SortItem* b)
 	return true;
 }
 
-// Row key of packSortedItems : same code, ethereal and quality on the same row.
+// Row key of packSortedItems : same code, ethereal and quality on the same row (the base of the row for unique and set items).
 static bool sortSameRow(const SortItem* a, const SortItem* b)
 {
-	return !strcmp(a->code, b->code) && a->isEthereal == b->isEthereal && sortSubQualityOf(a) == sortSubQualityOf(b);
+	return !strcmp(a->baseCode, b->baseCode) && a->isEthereal == b->isEthereal && sortSubQualityOf(a) == sortSubQualityOf(b);
 }
 
 struct SortPages
