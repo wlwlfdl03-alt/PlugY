@@ -91,7 +91,7 @@ normalTradeStash:
 Diablo II Classic stash has its own layout : "bank" background, gold field above a 6x4 grid at the bottom.
 With the big stash, Classic games use the LoD layout with the PlugY background :
 the D2Client instructions choosing the stash layout read stashLodLayout instead of IsLodGame
-(1.14d calls a function returning IsLodGame : these calls are redirected to caller_isLodStashLayout_114).
+(1.09b, 1.09d and 1.14d call a function returning IsLodGame : these calls are redirected to caller_isLodStashLayout).
 */
 DWORD stashLodLayout = 0;
 DWORD* ptStashBankImage = NULL;
@@ -128,7 +128,7 @@ FCT_ASM ( caller_isOnStashGoldField )
 	RETN
 }}
 
-FCT_ASM ( caller_isLodStashLayout_114 )
+FCT_ASM ( caller_isLodStashLayout )
 	PUSH ECX
 	PUSH EDX
 	CALL updateStashLayout
@@ -181,15 +181,17 @@ void Install_BigStash()
 	//6FB443FC  |. 68 04010000    PUSH 104
 	//00489EB5  |. 68 04010000    PUSH 104                                 ; |Arg2 = 00000104
 
-	if (version_D2Client == V113c || version_D2Client == V113d || version_D2Client == V114d)
+	if (version_D2Client == V109b || version_D2Client == V109d || version_D2Client == V113c || version_D2Client == V113d || version_D2Client == V114d)
 	{
 		log_msg("Patch D2Client for use the LoD stash layout in Diablo II Classic games. (BigStash)\n");
 		active_classicBigStash = true;
-		D2isExpansionInstalled = R8(D2Client, 0000, 0000, 0000, 0000, 0000, 0000, BF8C, BEA0, 8F20);
+		D2isExpansionInstalled = R8(D2Client, C093A, BFCBA, 0000, 0000, 0000, 0000, BF8C, BEA0, 8F20);
 
 		// Load stash background even in Classic install
-		mem_seek R8(D2Client, 0000, 0000, 0000, 0000, 0000, 0000, 8CC06, 943E6, 89E9D);
+		mem_seek R8(D2Client, 45B06, 45B06, 0000, 0000, 0000, 0000, 8CC06, 943E6, 89E9D);
 		MEMC_REF4( D2isExpansionInstalled, caller_loadTradeStash);
+		//6FAE5B05  |. E8 30AE0700    CALL <JMP.&Fog.#10227>
+		//6FAE5B05  |. E8 B0A10700    CALL <JMP.&Fog.#10227>
 		//6FB3CC05  |. E8 82F3F7FF    CALL <JMP.&Fog.#10227>
 		//6FB443E5  |. E8 B67AF7FF    CALL <JMP.&Fog.#10227>
 		//00489E9C  |. E8 7FF0F7FF    CALL Game.00408F20
@@ -232,29 +234,59 @@ void Install_BigStash()
 		//6FB3B6B0  |$ 8B0D 5498BC6F  MOV ECX,DWORD PTR DS:[6FBC9854]
 		//6FB3FA30  |$ 8B0D B487BB6F  MOV ECX,DWORD PTR DS:[6FBB87B4]
 	}
-	else if (version_D2Client == V114d)
+	else if (version_D2Client == V109b || version_D2Client == V109d || version_D2Client == V114d)
 	{
-		DWORD D2isLODGame_114 = offset_D2Client + 0x4DCC0;
+		DWORD D2isLODGameFct = R8(D2Client, BA00, B9F0, 0000, 0000, 0000, 0000, 0000, 0000, 4DCC0);
 
 		// Stash background
-		mem_seek R8(D2Client, 0000, 0000, 0000, 0000, 0000, 0000, 0000, 0000, 8F19C);
-		MEMC_REF4( D2isLODGame_114, caller_isLodStashLayout_114);
+		mem_seek R8(D2Client, 38ECF, 38ECF, 0000, 0000, 0000, 0000, 0000, 0000, 8F19C);
+		MEMC_REF4( D2isLODGameFct, caller_isLodStashLayout);
+		//6FAD8ECE  |. E8 2D2BFDFF    CALL D2Client.6FAABA00
+		//6FAD8ECE  |. E8 1D2BFDFF    CALL D2Client.6FAAB9F0
 		//0048F19B  |. E8 20EBFBFF    CALL Game.0044DCC0
 
 		// Position of max gold text
-		mem_seek R8(D2Client, 0000, 0000, 0000, 0000, 0000, 0000, 0000, 0000, 8F2B1);
-		MEMC_REF4( D2isLODGame_114, caller_isLodStashLayout_114);
+		mem_seek R8(D2Client, 38FF1, 38FF1, 0000, 0000, 0000, 0000, 0000, 0000, 8F2B1);
+		MEMC_REF4( D2isLODGameFct, caller_isLodStashLayout);
+		//6FAD8FF0  |. E8 0B2AFDFF    CALL D2Client.6FAABA00
+		//6FAD8FF0  |. E8 FB29FDFF    CALL D2Client.6FAAB9F0
 		//0048F2B0  |. E8 0BEAFBFF    CALL Game.0044DCC0
 
 		// Position of gold field
-		mem_seek R8(D2Client, 0000, 0000, 0000, 0000, 0000, 0000, 0000, 0000, 8820D);
-		MEMC_REF4( D2isLODGame_114, caller_isLodStashLayout_114);
+		mem_seek R8(D2Client, 42D46, 42D46, 0000, 0000, 0000, 0000, 0000, 0000, 8820D);
+		MEMC_REF4( D2isLODGameFct, caller_isLodStashLayout);
+		//6FAE2D45  |. E8 B68CFCFF    CALL D2Client.6FAABA00
+		//6FAE2D45  |. E8 A68CFCFF    CALL D2Client.6FAAB9F0
 		//0048820C  |. E8 AF5AFCFF    CALL Game.0044DCC0
 
 		// Mouse over gold field
-		mem_seek R8(D2Client, 0000, 0000, 0000, 0000, 0000, 0000, 0000, 0000, 89921);
-		MEMC_REF4( D2isLODGame_114, caller_isLodStashLayout_114);
+		mem_seek R8(D2Client, 45052, 45052, 0000, 0000, 0000, 0000, 0000, 0000, 89921);
+		MEMC_REF4( D2isLODGameFct, caller_isLodStashLayout);
+		//6FAE5051  |. E8 AA69FCFF    CALL D2Client.6FAABA00
+		//6FAE5051  |. E8 9A69FCFF    CALL D2Client.6FAAB9F0
 		//00489920  |$ E8 9B43FCFF    CALL Game.0044DCC0
+
+		if (version_D2Client == V109b || version_D2Client == V109d)
+		{
+			// 1.09 checks the gold field again : popup of the gold field, button down (second check) and button up.
+			// Popup of gold field
+			mem_seek R8(D2Client, 42D9E, 42D9E, 0000, 0000, 0000, 0000, 0000, 0000, 0000);
+			MEMC_REF4( D2isLODGameFct, caller_isLodStashLayout);
+			//6FAE2D9D  |. E8 5E8CFCFF    CALL D2Client.6FAABA00
+			//6FAE2D9D  |. E8 4E8CFCFF    CALL D2Client.6FAAB9F0
+
+			// Mouse over gold field (button down, second check)
+			mem_seek R8(D2Client, 45341, 45341, 0000, 0000, 0000, 0000, 0000, 0000, 0000);
+			MEMC_REF4( D2isLODGameFct, caller_isLodStashLayout);
+			//6FAE5340  |. E8 BB66FCFF    CALL D2Client.6FAABA00
+			//6FAE5340  |. E8 AB66FCFF    CALL D2Client.6FAAB9F0
+
+			// Mouse over gold field (button up)
+			mem_seek R8(D2Client, 4577E, 4577E, 0000, 0000, 0000, 0000, 0000, 0000, 0000);
+			MEMC_REF4( D2isLODGameFct, caller_isLodStashLayout);
+			//6FAE577D  |. E8 7E62FCFF    CALL D2Client.6FAABA00
+			//6FAE577D  |. E8 6E62FCFF    CALL D2Client.6FAAB9F0
+		}
 	}
 
 	log_msg("\n");

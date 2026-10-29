@@ -9,6 +9,7 @@
 #include "common.h"
 
 bool isExpansionCharacter(char* name);
+bool isLODGame(Game* ptGame);
 const char* getSharedSaveFilePrefix(bool isHardcore, bool isLOD);
 BYTE* readSharedSaveFile(char* name, DWORD* size, bool isLOD);
 void writeSharedSaveFile(char* name, BYTE* data, DWORD size, bool isHardcore, bool isLOD);

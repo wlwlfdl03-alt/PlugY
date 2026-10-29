@@ -34,13 +34,13 @@ DWORD STDCALL LoadSPCustomData(Unit* ptChar)
 		{log_msg("LoadSPCustomData : PCGame == NULL\n");return 0x1B;}//Unknow failure
 
 	DWORD ret=0;
-	log_msg(PCGame->isLODGame ? "is LOD Game\n" : "is Classic Game\n");
+	log_msg(isLODGame(PCGame) ? "is LOD Game\n" : "is Classic Game\n");
 	data = readExtendedSaveFile(PCPlayerData->name, &size);
 	ret = loadExtendedSaveFile(ptChar, data, size);
 	D2FogMemDeAlloc(data,__FILE__,__LINE__,0);
 	if (!ret && active_sharedStash)
 	{
-		data = readSharedSaveFile(PCPlayerData->name, &size, PCGame->isLODGame != 0);
+		data = readSharedSaveFile(PCPlayerData->name, &size, isLODGame(PCGame));
 		ret = loadSharedSaveFile(ptChar, data, size);
 		D2FogMemDeAlloc(data,__FILE__,__LINE__,0);
 	}
@@ -350,7 +350,7 @@ DWORD STDCALL LoadMPCustomData(Unit* ptChar)
 
 	if (!ret)
 	{
-		log_msg(PCGame->isLODGame ? "is LOD Game\n" : "is Classic Game\n");
+		log_msg(isLODGame(PCGame) ? "is LOD Game\n" : "is Classic Game\n");
 		ret = loadExtendedSaveFile(ptChar, curSF->dataExtended, curSF->sizeExtended);
 		if (!ret && active_sharedStash)
 			ret = loadSharedSaveFile(ptChar, curSF->dataShared, curSF->sizeShared);

@@ -154,7 +154,7 @@ void STDCALL SaveSPPlayerCustomData(Unit* ptChar)
 	log_msg("\n--- Start SaveSPPlayerCustomData ---\n");
 
 	NetClient* ptClient = D2GetClient(ptChar,__FILE__,__LINE__);
-	backupSaveFiles(PCPlayerData->name, ptClient->isHardCoreGame, PCGame->isLODGame != 0);
+	backupSaveFiles(PCPlayerData->name, ptClient->isHardCoreGame, isLODGame(PCGame));
 
 	if (active_PlayerCustomData)
 	{
@@ -177,7 +177,7 @@ void STDCALL SaveSPPlayerCustomData(Unit* ptChar)
 			d2_assert(!dataShr, "Error : Memory allocation Shared SaveFile", __FILE__, __LINE__);
 			saveSharedSaveFile(ptChar, &dataShr, &maxSizeShr, &curSizeShr);
 
-			writeSharedSaveFile(PCPlayerData->name, dataShr, curSizeShr, ptClient->isHardCoreGame != 0, PCGame->isLODGame != 0);
+			writeSharedSaveFile(PCPlayerData->name, dataShr, curSizeShr, ptClient->isHardCoreGame != 0, isLODGame(PCGame));
 			D2FreeMem(PCGame->memoryPool, dataShr,__FILE__,__LINE__,0);
 		}
 	}
