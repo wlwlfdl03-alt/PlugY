@@ -7,7 +7,7 @@
 	(UC_SORT_STASH) with a checksum of its result, the client moves its items only when its result is the same.
 	The names and the index flags of the pages are removed.
 
-	Only with the big stash in 1.09b, 1.09d, 1.13c, 1.13d and 1.14d (10x10 stash in LoD and Classic games).
+	Only with the big stash (10x10 stash in LoD and Classic games).
 
 =================================================================*/
 
@@ -534,7 +534,7 @@ void Install_SortStash()
 
 	// The 10x10 grid of the big stash is used in all games only where Classic games have it too.
 	active_sortStash = active_bigStash && active_classicBigStash;
-	log_msg("Stash sort button : %s\n\n", active_sortStash ? "on" : "off (needs ActiveBigStash=1 with 1.09b, 1.09d, 1.13c, 1.13d or 1.14d)");
+	log_msg("Stash sort button : %s\n\n", active_sortStash ? "on" : "off (needs ActiveBigStash=1)");
 
 	isInstalled = true;
 }
