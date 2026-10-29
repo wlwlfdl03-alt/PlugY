@@ -118,6 +118,10 @@
   - 12차 키(그림 변형)는 `ItemData+0x49`(`varGfx`, D2MOO `nInvGfxIdx`)이다. 같은 그림끼리 붙이기만 하고, 줄은 나누지 않는다(JS와 같음).
   - 13차 키(표시 이름)는 아이템 코드, 그다음 유니크/세트 행 번호로 비교한다. 게임 언어와 무관하다.
   - 세트 순서는 이름 대신 sets.txt 행 순서이다.
+  - 큐브로 업그레이드한 유니크/세트 아이템은 uniqueitems.txt / setitems.txt 행의 원래 베이스로 정렬한다(등급, 13차 키, 같은 줄 판정). 같은 행 안에서는 실제 등급, 실제 코드 순이다.
+    - 예: 배틀 건틀릿으로 업그레이드한 메이지피스트는 메이지피스트 줄 끝에 붙는다(노말, 익셉셔널, 엘리트 순).
+    - 원래 베이스 코드가 그 아이템의 normcode/ubercode/ultracode 중 하나가 아니면 실제 코드를 쓴다.
+    - 에테리얼과 링/아뮬렛/주얼의 그림 순서는 그대로 두었다. 같은 유니크라도 그림이 다를 수 있다.
   - 정렬이 끝나면 그 창고 모든 페이지의 이름과 인덱스 플래그를 지운다.
   - 채팅 명령어는 없다. 창고 버튼만 있다.
   - `MaxPersonnalPages`/`MaxSharedPages`로 페이지가 모자라면 JS 공유창고 경로처럼 그룹/줄 구분 없이 다시 배치한다. 그래도 모자라면 아무것도 옮기지 않는다.
@@ -154,6 +158,7 @@
   - items.txt code +0x80 ~ ultracode +0x8C, invwidth/invheight +0x10F/+0x110, type +0x11E
   - runes.txt 0x120 레코드(itype WORD +0x86), setitems.txt 0x1B8 레코드(set +0x2C), itemtypes 0xE4 레코드
   - `SgptDataTables`: nbItemTypes +0xBFC, setItems +0xC18, nbSetItems +0xC1C. txt 개수 변수의 실제 주소와 맞춰 봤다.
+  - uniqueitems.txt 0x14C 레코드(code +0x28), setitems.txt code +0x28(D2MOO 1.10). `SgptDataTables`: uniqueItems +0xC24, nbUniqueItems +0xC28. `d2BinFile.h`의 `itemCode` 필드
 - 1.09 (1.09b, 1.09d): 구조가 1.10 이상과 달라서 `IS_109`(`version_D2Common <= V109d`) 분기로 처리한다. 1.10 이상 경로는 그대로다.
   - 1.09 값은 D2Common getter 함수와 txt 필드 테이블(스택에 만드는 BINField 배열)에서 확인했다. 1.09b와 1.09d는 쓰는 함수 27개의 본문, 필드 위치, 레코드 크기가 모두 같다.
 
@@ -163,22 +168,27 @@
   | ItemData / 소켓 인벤토리 | Unit+14 / +60 | Unit+70 / +84 (`shifting` 사용) |
   | quality, flags | ItemData +00, +18 | 같음 |
   | uniqueID / 그림 변형 | ItemData +28 / +49 | `#10732` / `#10727` (+24 / +45) |
-  | items.txt | `ItemsBIN` | code +144, ubercode +14C, ultracode +150, invwidth/invheight +1A4/+1A5, type BYTE +1B3 |
+  | items.txt | `ItemsBIN` | code +144, normcode +148, ubercode +14C, ultracode +150, invwidth/invheight +1A4/+1A5, type BYTE +1B3 |
   | itemtypes 수 | `SgptDataTables->nbItemTypes` | `#10672` (1.09에서는 `SgptDataTables`를 쓸 수 없다) |
   | runes.txt | `RunesBIN` (0x120) | 0x118 레코드, complete +80, itype BYTE +86, etype BYTE +8C, rune +90 |
   | 세트 | sets.txt 행 (`setItems[].setId`) | setitems.txt 행이 곧 세트이고, uniqueID가 세트 행 번호이다 |
+  | 유니크 베이스 코드 | uniqueitems.txt +28 | `#10607`(개수, 그 뒤에 표 포인터), 0xE4 레코드, code +00 |
+  | 세트 베이스 코드 | setitems.txt +28 | `#10609`(개수, 그 뒤에 표 포인터), 0x534 레코드(한 행이 한 세트), item1 ~ item6 코드 +8C부터 0x3C 간격 |
 
   - 세트 순서(사용자가 정함): 세트끼리는 setitems.txt 행 순서이고, 같은 세트 안에서는 아이템 코드 순서이다.
+  - 1.09 세트 조각은 아이템 코드와 같은 조각을 먼저 찾고, 없으면 같은 노말/익셉셔널/엘리트 계열의 조각을 쓴다.
+  - 1.09 큐브에는 익셉셔널/엘리트로 바꾸는 출력(`exc`/`eli`)이 없다(D2Common의 cubemain 수정자 문자열로 확인). 그래서 1.09에서는 업그레이드 아이템이 생기지 않는다.
   - 아이템 이동(`moveStashItems_9`)은 `changeToSelectedStash_9`과 같은 방식이다.
     - 현재 페이지의 노드를 인벤토리 목록에서 직접 떼고 `#10250`으로 격자 칸을 비운다.
     - 1.09의 `D2InvAddItem`은 격자만 채운다. 노드는 `#10242`가 새로 만들어 연결한다. `D2InvRemoveItem`(#10243)은 노드를 해제하지만 격자는 비우지 않는다.
     - 다른 페이지에 놓을 아이템은 `#10328`/`#10331`로 위치를 쓰고 노드를 그 페이지 목록에 연결한다.
-  - 1.09 전용 함수 `D2SetPosX`(#10328), `D2SetPosY`(#10331), `D2GetNbItemTypesBIN`(#10672), `D2GetVarGfxIndex`(#10727)는 `Commons/D2Funcs.h`에 있다. 다른 버전 열은 `00000`이다.
+  - 1.09 전용 함수 `D2SetPosX`(#10328), `D2SetPosY`(#10331), `D2GetNbItemTypesBIN`(#10672), `D2GetVarGfxIndex`(#10727), `D2GetNbUniqueItemsBIN`(#10607), `D2GetNbSetItemsBIN`(#10609)는 `Commons/D2Funcs.h`에 있다. 다른 버전 열은 `00000`이다.
 - `sortStashCore.h`는 게임 함수를 쓰지 않는다. Linux에서 `tools/sort_stash_test.cpp`로 빌드해 JS 결과와 비교할 수 있다.
   ```
   g++ -o sort_stash_test tools/sort_stash_test.cpp
   ./sort_stash_test [gridW gridH maxPages] < items.txt
   ```
+  - 입력 줄 끝의 `baseCode itemTier` 열(업그레이드한 유니크/세트)은 생략할 수 있다. 생략하면 `code`, `tier`와 같다.
 
 ## 바이너리 분석 방법
 
@@ -225,3 +235,5 @@
 - PR #15: 이 이력에 PR #14 추가(PR #14 병합 뒤 푸시된 줄)
 - PR #16: 1.10 / 1.11 / 1.11b / 1.12 BigStash 클래식 화면과 창고 정렬(모든 버전 지원), 테스트 결과와 문서 갱신
 - PR #17: 태그 푸시 때 GitHub 릴리스 자동 생성(`build.yml`)
+- PR #18: 큐브로 업그레이드한 유니크/세트 아이템을 원래 베이스 기준으로 정렬(1.09 포함)
+- PR #19: PR #18 내용을 `CLAUDE.md`에 기록, 인게임 테스트 목록과 남은 것 삭제
