@@ -25,6 +25,12 @@
 - `.github/workflows/build.yml`가 push, PR, 수동 실행 때 windows-2022에서 빌드하고 `PlugY` 아티팩트를 올린다. 사용자는 이 아티팩트로 테스트한다.
   - 아티팩트는 게임 폴더 구조와 같다. 최상위에 `PlugY.dll`, `PlugY.pdb`가 있고, `PlugY\`에 `PlugYInstaller/PlugY/`의 데이터 파일(dc6, `LocalizedStrings.ini` 등)이 있다.
   - 새 이미지나 문자열을 추가하면 DLL만으로는 동작하지 않는다. `PlugY\`의 파일도 함께 복사해야 한다(없는 dc6는 "Don't find Buttons Images File" 오류로 종료된다).
+- 태그를 푸시하면 같은 워크플로가 릴리스를 만든다(`Release` 단계, 태그 실행일 때만).
+  - 아티팩트 파일을 `PlugY-<태그>.zip`으로 묶어 `PlugY <태그>` 릴리스에 첨부한다. 릴리스 노트는 자동 생성이다.
+  - 이름 규칙(사용자가 정함): `14.03-classic`. 코드의 `PLUGY_VERSION "14.03"`은 그대로 둔다. 같은 태그로는 한 번만 만들 수 있으므로 다음은 `14.03-classic.2`처럼 쓴다.
+  - Claude 세션은 작업 브랜치만 푸시할 수 있다(태그 푸시는 HTTP 403). 태그는 사용자가 PC에서 푸시한다.
+  - GitHub 웹에서 릴리스를 직접 발행하면 워크플로의 `gh release create`가 "이미 있음"으로 실패한다. 태그만 푸시한다.
+  - 첫 릴리스: `14.03-classic`(PR #17 병합 커밋 `07ad4f7`)
 - `PlugY/`에 .cpp를 추가하면 `.github/build/PlugY.vcxproj`의 `ClCompile` 목록에도 추가한다.
 - Linux에서는 `tools/check_syntax.sh`로 clang 문법 검사만 할 수 있다. 필요한 패키지는 `clang`과 `mingw-w64-i686-dev`이다.
   - 이 검사는 링크를 하지 않는다. 함수 시그니처를 바꾸면 헤더 선언과 모든 호출부를 직접 grep으로 확인한다(PR #2의 LNK2001이 이렇게 생겼다).
@@ -263,3 +269,4 @@
 - PR #14: PR #13 작업 내용과 1.09b / 1.09d 테스트 결과를 `CLAUDE.md`, `README.md`에 기록, 작업 규칙 추가(수정 전 보고와 허가, 문서는 마지막에 갱신)
 - PR #15: 이 이력에 PR #14 추가(PR #14 병합 뒤 푸시된 줄)
 - PR #16: 1.10 / 1.11 / 1.11b / 1.12 BigStash 클래식 화면과 창고 정렬(모든 버전 지원), 테스트 결과와 문서 갱신
+- PR #17: 태그 푸시 때 GitHub 릴리스 자동 생성(`build.yml`)
