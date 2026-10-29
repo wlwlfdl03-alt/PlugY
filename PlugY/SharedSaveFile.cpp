@@ -43,6 +43,12 @@ bool isExpansionCharacter(char* name)
 	return status < 0 || (status & D2S_STATUS_EXPANSION);// Unknown : keep LoD behavior.
 }
 
+// LoD game : Game+70 (isLODGame), Game+50 in 1.09b (D2Game reads the difficulty at +4D and this flag at +50).
+bool isLODGame(Game* ptGame)
+{
+	return (version_D2Game == V109b ? *(DWORD*)((BYTE*)ptGame + 0x50) : ptGame->isLODGame) != 0;
+}
+
 // Diablo II Classic characters use their own shared stash : LoD items can't exist in a Classic game.
 const char* getSharedSaveFilePrefix(bool isHardcore, bool isLOD)
 {
