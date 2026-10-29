@@ -30,7 +30,6 @@
   - 이름 규칙(사용자가 정함): `14.03-classic`. 코드의 `PLUGY_VERSION "14.03"`은 그대로 둔다. 같은 태그로는 한 번만 만들 수 있으므로 다음은 `14.03-classic.2`처럼 쓴다.
   - Claude 세션은 태그를 푸시할 수 없다(HTTP 403, 브랜치 푸시는 된다). 태그는 사용자가 PC에서 푸시한다.
   - GitHub 웹에서 릴리스를 직접 발행하면 워크플로의 `gh release create`가 "이미 있음"으로 실패한다. 태그만 푸시한다.
-  - 첫 릴리스: `14.03-classic`(PR #17 병합 커밋 `07ad4f7`)
 - `PlugY/`에 .cpp를 추가하면 `.github/build/PlugY.vcxproj`의 `ClCompile` 목록에도 추가한다.
 - Linux에서는 `tools/check_syntax.sh`로 clang 문법 검사만 할 수 있다. 필요한 패키지는 `clang`과 `mingw-w64-i686-dev`이다.
   - 이 검사는 링크를 하지 않는다. 함수 시그니처를 바꾸면 헤더 선언과 모든 호출부를 직접 grep으로 확인한다(PR #2의 LNK2001이 이렇게 생겼다).
